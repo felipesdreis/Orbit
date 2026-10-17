@@ -1,0 +1,11 @@
+:root {
+  --orbit-bg: #06090d;
+  --orbit-ciano: #5ee7ff;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--orbit-bg);
+  overscroll-behavior: none;
+}

@@ -1,0 +1,271 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.mic {
+  position: absolute;
+  top: 2vmin;
+  left: 2vmin;
+  width: clamp(28px, 6vmin, 56px);
+  fill: var(--orbit-ciano);
+  stroke: var(--orbit-ciano);
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: pulso 1.2s ease-in-out infinite;
+
+  path {
+    fill: none;
+  }
+}
+
+.rosto {
+  --sx: 1;
+  --sy: 1;
+  --k: 1;
+  --blink: 1;
+  --ex: 0px;
+  --ey: 0px;
+  --lid-y: -60px;
+  --lid-rot: 0deg;
+  --cheek-y: 0px;
+  --brilho: 8px;
+
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.6s ease;
+
+  // Tudo que muda de emoção anima por transição; os keyframes ficam só para movimento contínuo.
+  .olho-mov {
+    transform: translate(calc(var(--gx, 0px) + var(--ex)), calc(var(--gy, 0px) + var(--ey)))
+      scale(calc(var(--sx) * var(--k)), calc(var(--sy) * var(--k) * var(--blink)));
+    transition: transform 0.35s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+
+  .olho-forma {
+    fill: var(--orbit-ciano);
+  }
+
+  // Dentro da máscara do olho: preto = parte apagada.
+  .palpebra,
+  .bochecha {
+    fill: #000;
+    transition: transform 0.35s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+
+  .palpebra {
+    transform: rotate(var(--lid-rot)) translateY(var(--lid-y));
+  }
+
+  .dir .palpebra {
+    transform: rotate(calc(var(--lid-rot) * -1)) translateY(var(--lid-y));
+  }
+
+  .bochecha {
+    transform: translateY(var(--cheek-y));
+  }
+
+  .olhos {
+    filter: drop-shadow(0 0 var(--brilho) rgba(94, 231, 255, 0.55));
+    transition: filter 0.4s ease;
+  }
+
+  &.piscando {
+    --blink: 0.06;
+
+    .olho-mov {
+      transition-duration: 0.09s;
+    }
+  }
+
+  .boca,
+  .boca-aberta,
+  .boca-fala {
+    transition: opacity 0.25s ease;
+  }
+
+  .boca {
+    fill: none;
+    stroke: var(--orbit-ciano);
+    stroke-width: 14;
+    stroke-linecap: round;
+    d: path('M160 238 Q200 242 240 238');
+    transition: d 0.35s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+
+  .boca-aberta {
+    fill: var(--orbit-ciano);
+    opacity: 0;
+    transform-origin: 200px 240px;
+    transform-box: view-box;
+  }
+
+  // Sorriso aberto: só o feliz fala assim, para não perder o formato da emoção.
+  .boca-fala {
+    fill: var(--orbit-ciano);
+    stroke: var(--orbit-ciano);
+    stroke-width: 10;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform-origin: 200px 228px;
+    transform-box: view-box;
+  }
+
+  .pontos circle,
+  .zzz text {
+    opacity: 0;
+  }
+
+  .pontos circle {
+    fill: var(--orbit-ciano);
+  }
+
+  .zzz text {
+    fill: var(--orbit-ciano);
+    font: 700 28px sans-serif;
+  }
+
+  // ---- Emoções ----
+
+  &[data-visual='feliz'] {
+    --cheek-y: -110px;
+    --lid-y: -60px;
+    .boca {
+      d: path('M140 226 Q200 280 260 226');
+    }
+  }
+
+  &[data-visual='pensando'] {
+    --ex: 16px;
+    --ey: -18px;
+    --lid-y: -34px;
+    --lid-rot: 8deg;
+    .boca {
+      d: path('M168 244 Q200 232 236 240');
+    }
+  }
+
+  &[data-visual='curioso'] {
+    --lid-y: -44px;
+    --lid-rot: -6deg;
+    .esq .olho-mov {
+      --k: 0.9;
+    }
+    .dir .olho-mov {
+      --k: 1.18;
+    }
+    .boca {
+      d: path('M165 242 Q205 252 235 236');
+    }
+  }
+
+  &[data-visual='surpreso'] {
+    --sx: 0.92;
+    --sy: 1.12;
+    --lid-y: -80px;
+    .boca {
+      opacity: 0;
+    }
+    .boca-aberta {
+      opacity: 1;
+      transform: scale(0.6, 0.9);
+      transition: opacity 0.25s ease, transform 0.3s ease;
+    }
+  }
+
+  // ---- Estados ----
+
+  &[data-estado='standby'] {
+    --sy: 0.07;
+    --brilho: 2px;
+    opacity: 0.4;
+    .boca {
+      d: path('M178 240 Q200 241 222 240');
+    }
+    .zzz text {
+      animation: zzz 3.6s ease-in-out infinite;
+      &:nth-child(2) {
+        animation-delay: 1.2s;
+      }
+      &:nth-child(3) {
+        animation-delay: 2.4s;
+      }
+    }
+  }
+
+  &[data-estado='ouvindo'] {
+    .olhos {
+      animation: brilho 1.8s ease-in-out infinite;
+    }
+  }
+
+  &[data-estado='pensando'] .pontos circle {
+    animation: ponto 1.2s ease-in-out infinite;
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+
+  &[data-estado='falando'] {
+    .boca {
+      opacity: 0;
+    }
+    .boca-aberta {
+      opacity: 1;
+      animation: fala 0.42s ease-in-out infinite alternate;
+    }
+  }
+
+  &[data-estado='falando'][data-visual='feliz'] {
+    .boca-aberta {
+      opacity: 0;
+    }
+    .boca-fala {
+      opacity: 1;
+      animation: fala-feliz 0.42s ease-in-out infinite alternate;
+    }
+  }
+}
+
+@keyframes zzz {
+  0% { opacity: 0; transform: translateY(8px); }
+  35% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes brilho {
+  50% { filter: drop-shadow(0 0 18px rgba(94, 231, 255, 0.9)); }
+}
+
+@keyframes pulso {
+  50% { transform: scale(1.15); opacity: 0.55; }
+}
+
+@keyframes ponto {
+  0%, 100% { opacity: 0.15; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-8px); }
+}
+
+@keyframes fala {
+  from { transform: scale(0.85, 0.2); }
+  to { transform: scale(1.05, 1); }
+}
+
+@keyframes fala-feliz {
+  from { transform: scale(1, 0.2); }
+  to { transform: scale(1, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rosto * {
+    animation: none !important;
+  }
+}

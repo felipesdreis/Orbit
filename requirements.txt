@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+mcp<2
+psutil
+pillow
+httpx
+numpy
+# Dev
+pytest
+pytest-asyncio
+# TTS real (somente no PC, ver README): kokoro, soundfile

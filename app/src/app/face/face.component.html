@@ -1,0 +1,60 @@
+<svg
+  class="rosto"
+  viewBox="0 0 400 300"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  [attr.aria-label]="'Orbit: ' + estado()"
+  [attr.data-estado]="estado()"
+  [attr.data-visual]="visual()"
+  [class.piscando]="piscando()"
+  [style.--gx]="olhar().x + 'px'"
+  [style.--gy]="olhar().y + 'px'"
+>
+  <g class="olhos">
+    <g class="olho esq" transform="translate(132 115)">
+      <!-- Pálpebra e bochecha apagam o olho por máscara (sem pintar com a cor do fundo), assim o brilho segue só o que sobra -->
+      <mask id="mEsq" maskUnits="userSpaceOnUse" x="-60" y="-70" width="120" height="140">
+        <rect x="-60" y="-70" width="120" height="140" fill="#fff" />
+        <rect class="palpebra" x="-70" y="-110" width="140" height="100" />
+        <circle class="bochecha" cx="0" cy="150" r="72" />
+      </mask>
+      <g class="olho-mov">
+        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" mask="url(#mEsq)" />
+      </g>
+    </g>
+    <g class="olho dir" transform="translate(268 115)">
+      <mask id="mDir" maskUnits="userSpaceOnUse" x="-60" y="-70" width="120" height="140">
+        <rect x="-60" y="-70" width="120" height="140" fill="#fff" />
+        <rect class="palpebra" x="-70" y="-110" width="140" height="100" />
+        <circle class="bochecha" cx="0" cy="150" r="72" />
+      </mask>
+      <g class="olho-mov">
+        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" mask="url(#mDir)" />
+      </g>
+    </g>
+  </g>
+
+  <path class="boca" />
+  <ellipse class="boca-aberta" cx="200" cy="240" rx="26" ry="20" />
+  <path class="boca-fala" d="M144 228 Q200 296 256 228 Z" />
+
+  <g class="pontos" aria-hidden="true">
+    <circle cx="300" cy="40" r="7" />
+    <circle cx="324" cy="40" r="7" />
+    <circle cx="348" cy="40" r="7" />
+  </g>
+
+  <g class="zzz" aria-hidden="true">
+    <text x="300" y="70">z</text>
+    <text x="324" y="48">Z</text>
+    <text x="352" y="24">Z</text>
+  </g>
+</svg>
+
+@if (estado() === 'ouvindo') {
+  <!-- Microfone no canto: sinal de que o Orbit está escutando -->
+  <svg class="mic" viewBox="0 0 24 24" role="img" aria-label="Ouvindo">
+    <rect x="9" y="2" width="6" height="12" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+  </svg>
+}
