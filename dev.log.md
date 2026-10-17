@@ -42,9 +42,18 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 - **Filtro do nome por palavra inteira** (subagente): "exorbitante" não casa; "órbita" casa porque o handoff pede essa variante (efeito colateral: "a lua está em órbita" também acorda); "o bit" casa por virar "obit".
 - **Se o servidor nunca mandar `fim`,** o Orbit volta a ouvir depois de 90 s.
 
+**Verificação de ponta a ponta (Chromium real, STT simulado, servidor real com ponte e TTS falsos, áudio WAV real)** — 7 cenários passaram:
+- toque acorda e liga o microfone; frase sem o nome é ignorada;
+- pensando → falando (só quando o áudio começa a tocar, +359 ms) → ouvindo (+1,7 s); 2 áudios tocaram em ordem; o reconhecimento só reiniciou no instante em que o último áudio terminou;
+- follow-up sem o nome aceito logo após a resposta e ignorado depois de 27 s;
+- imagem aparece (640 px) e fecha com um toque;
+- com o servidor derrubado aparece "Sem conexão com o PC" e, ao subir de novo, o app reconecta sozinho (< 5 s);
+- console sem erros inesperados.
+
 **Não verificado**
-- Microfone e reconhecimento reais no Chrome do PC (aqui o STT foi simulado).
-- Áudio audível, e tempo de resposta ponta a ponta com voz (STT → LLM → TTS).
+- Microfone e reconhecimento reais no Chrome do PC (o STT foi simulado; o falso não reproduz o timeout de silêncio nem os erros de rede do Chrome).
+- Áudio audível, Kokoro real, e tempo de resposta ponta a ponta com voz (STT → LLM → TTS).
+- Voz nativa de fallback (`audio: false`), expirar dos 15 min e `visibilitychange` só têm teste unitário (relógio simulado).
 - Tablet/Android (etapa 4).
 
 **Como testar**: roteiro no `README.md`, seção "Etapa 3".
