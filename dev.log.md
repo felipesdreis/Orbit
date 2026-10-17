@@ -7,14 +7,16 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 | Etapa | Situação |
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta ([PR #1](https://github.com/felipesdreis/Orbit/pull/1)) |
-| 2. Servidor + MCP + TTS no PC | código pronto e testado com LLM/TTS falsos; falta validar no PC |
+| 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pendente |
 | 4. APK | pendente |
 | 5. Guia e README | pendente |
 
 ## Pendências abertas
 
-- **Validar a etapa 2 no PC:** rodar com Ollama e Kokoro reais, conferir se o Gemma escolhe a tool certa e medir o tempo até o 1º áudio (tabela no README).
+- Latência: a busca de arquivo levou 11,6 s até o 1º áudio (10,1 s só até a resposta do LLM). Avaliar antes da etapa 3.
+- A resposta da busca traz o caminho completo e o Kokoro o lê em voz alta; considerar pedir no prompt só nome e pasta.
+- Tabela de tempos ainda não está no README (critério da etapa 2).
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 
 - Microfone riscado/esmaecido nos estados em que o Orbit não está ouvindo (falando, pensando). Hoje o ícone só aparece em `ouvindo`. Aguardando decisão.
@@ -22,7 +24,24 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 ---
 
-## 2026-10-17 — Etapa 2: servidor, MCP e TTS (código pronto, falta validar no PC)
+## 2026-10-17 — Etapa 2: validação no PC (Gemma4-E4B-uncensored + Kokoro pm_santa em CPU)
+
+`pytest -q`: 21 passed. Venv `.venv` na raiz (Python 3.10.11), `kokoro==0.9.4`. Ollama 0.40.5.
+
+| Frase | Tool chamada | Emoção | Resposta (s) | 1º áudio (s) | Áudios |
+|---|---|---|---|---|---|
+| orbit como está o pc | `pc_status` | neutro | 5,37 | **6,16** | 3 |
+| orbit mostra a tela | `screenshot` | curioso | 4,24 | **4,84** | 1 |
+| orbit procura o arquivo HANDOFF_ORBIT | `buscar_arquivo` | curioso | 10,13 | **11,59** | 1 |
+| orbit conta uma piada curta | nenhuma | feliz | 1,81 | **2,46** | 2 |
+
+- Gemma acertou a tool nas 3 frases que pediam uma; na piada não chamou nenhuma.
+- Mensagem `imagem` chegou com a resposta; a URL serviu o PNG (200, 1920x1080). WAVs: 24 kHz, abrem.
+- Do fim da resposta ao 1º áudio, o Kokoro levou de 0,6 s a 1,5 s; o gargalo é o LLM/tool.
+- O 1º teste incluiu carga do modelo no Ollama, então o `pc_status` pode estar inflado.
+- Log do servidor mostra "1º áudio" com acento quebrado quando redirecionado para arquivo no Windows (cosmético).
+
+## 2026-10-17 — Etapa 2: servidor, MCP e TTS (código pronto)
 
 **O que ficou pronto**
 - `tools/`: servidor MCP (`server.py`) que descobre sozinho todo `tools/*.py` e chama `registrar(mcp)`; módulo quebrado só gera log, não derruba o servidor. Tools de leitura: `pc_status`, `buscar_arquivo`, `screenshot` (devolve só o caminho do PNG).
