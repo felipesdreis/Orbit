@@ -12,17 +12,24 @@
 >
   <g class="olhos">
     <g class="olho esq" transform="translate(132 115)">
-      <g class="olho-mov">
-        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" />
+      <!-- Pálpebra e bochecha apagam o olho por máscara (sem pintar com a cor do fundo), assim o brilho segue só o que sobra -->
+      <mask id="mEsq" maskUnits="userSpaceOnUse" x="-60" y="-70" width="120" height="140">
+        <rect x="-60" y="-70" width="120" height="140" fill="#fff" />
         <rect class="palpebra" x="-70" y="-110" width="140" height="100" />
         <circle class="bochecha" cx="0" cy="150" r="72" />
+      </mask>
+      <g class="olho-mov">
+        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" mask="url(#mEsq)" />
       </g>
     </g>
     <g class="olho dir" transform="translate(268 115)">
-      <g class="olho-mov">
-        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" />
+      <mask id="mDir" maskUnits="userSpaceOnUse" x="-60" y="-70" width="120" height="140">
+        <rect x="-60" y="-70" width="120" height="140" fill="#fff" />
         <rect class="palpebra" x="-70" y="-110" width="140" height="100" />
         <circle class="bochecha" cx="0" cy="150" r="72" />
+      </mask>
+      <g class="olho-mov">
+        <rect class="olho-forma" x="-42" y="-55" width="84" height="110" rx="38" mask="url(#mDir)" />
       </g>
     </g>
   </g>
