@@ -49,6 +49,12 @@
     <text x="324" y="48">Z</text>
     <text x="352" y="24">Z</text>
   </g>
-
-  <circle class="mic" cx="200" cy="285" r="6" />
 </svg>
+
+@if (estado() === 'ouvindo') {
+  <!-- Microfone no canto: sinal de que o Orbit está escutando -->
+  <svg class="mic" viewBox="0 0 24 24" role="img" aria-label="Ouvindo">
+    <rect x="9" y="2" width="6" height="12" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+  </svg>
+}

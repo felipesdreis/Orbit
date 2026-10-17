@@ -5,6 +5,22 @@
   height: 100%;
 }
 
+.mic {
+  position: absolute;
+  top: 2vmin;
+  left: 2vmin;
+  width: clamp(28px, 6vmin, 56px);
+  fill: var(--orbit-ciano);
+  stroke: var(--orbit-ciano);
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: pulso 1.2s ease-in-out infinite;
+
+  path {
+    fill: none;
+  }
+}
+
 .rosto {
   --sx: 1;
   --sy: 1;
@@ -114,12 +130,6 @@
     font: 700 28px sans-serif;
   }
 
-  .mic {
-    fill: var(--orbit-ciano);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
   // ---- Emoções ----
 
   &[data-visual='feliz'] {
@@ -192,12 +202,6 @@
     .olhos {
       animation: brilho 1.8s ease-in-out infinite;
     }
-    .mic {
-      opacity: 1;
-      animation: pulso 1.2s ease-in-out infinite;
-      transform-origin: 200px 285px;
-      transform-box: view-box;
-    }
   }
 
   &[data-estado='pensando'] .pontos circle {
@@ -242,7 +246,7 @@
 }
 
 @keyframes pulso {
-  50% { transform: scale(1.8); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.55; }
 }
 
 @keyframes ponto {
