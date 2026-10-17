@@ -1,0 +1,11 @@
+{
+  "name": "Orbit",
+  "short_name": "Orbit",
+  "lang": "pt-BR",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#06090d",
+  "theme_color": "#06090d",
+  "start_url": ".",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

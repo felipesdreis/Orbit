@@ -1,0 +1,29 @@
+<ion-app>
+  <ion-content [scrollY]="false" [fullscreen]="true">
+    <main class="palco">
+      <app-face [estado]="estado()" [emocao]="emocao()" />
+    </main>
+
+    <button class="alternar" type="button" aria-label="Painel de teste" (click)="painel.set(!painel())">⚙</button>
+
+    @if (painel()) {
+      <section class="painel" aria-label="Painel de teste">
+        <div class="grupo">
+          <span>Estado</span>
+          @for (e of estados; track e) {
+            <ion-button size="small" [fill]="estado() === e ? 'solid' : 'outline'" (click)="estado.set(e)">{{ e }}</ion-button>
+          }
+        </div>
+        <div class="grupo">
+          <span>Emoção</span>
+          @for (e of emocoes; track e) {
+            <ion-button size="small" [fill]="emocao() === e ? 'solid' : 'outline'" (click)="emocao.set(e)">{{ e }}</ion-button>
+          }
+        </div>
+        <div class="grupo">
+          <ion-button size="small" color="medium" (click)="demo()">{{ demoRodando() ? 'Parar demo' : 'Demo (23 s)' }}</ion-button>
+        </div>
+      </section>
+    }
+  </ion-content>
+</ion-app>
