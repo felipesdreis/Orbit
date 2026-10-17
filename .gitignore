@@ -1,0 +1,21 @@
+# Segredos
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+.idea/
+
+# SO
+.DS_Store
+Thumbs.db
