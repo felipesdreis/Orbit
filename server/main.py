@@ -79,6 +79,7 @@ async def _atender(app: FastAPI, socket: WebSocket, base: str, historico: list[d
         log.exception("falha ao falar com o Ollama/MCP")
         resposta_texto, emocao, imagens = "Não consegui falar com o meu cérebro agora.", "neutro", []
     else:
+        log.info("resposta pronta em %.2f s", time.perf_counter() - inicio)
         resposta_texto, emocao = extrair_emocao(resposta.texto)
         imagens = resposta.imagens
 
@@ -90,8 +91,10 @@ async def _atender(app: FastAPI, socket: WebSocket, base: str, historico: list[d
     if tts is None:
         return
     for i, frase in enumerate(dividir_frases(resposta_texto)):
+        t0 = time.perf_counter()
         try:
             wav = await asyncio.to_thread(tts.sintetizar, frase)
+            log.info("TTS da frase %d (%d caracteres) em %.2f s", i + 1, len(frase), time.perf_counter() - t0)
         except Exception:
             log.exception("falha no TTS; o tablet usa a voz nativa")
             break

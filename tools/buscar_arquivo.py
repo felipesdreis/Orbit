@@ -51,7 +51,8 @@ def buscar(nome: str, raizes_: list[Path], limite_s: float = LIMITE_S) -> list[P
 def formatar(nome: str, achados: list[Path]) -> str:
     if not achados:
         return f"Não achei nada com o nome {nome}."
-    return f"Achei {len(achados)}:\n" + "\n".join(str(p) for p in achados)
+    # Só nome e pasta final: o resultado é falado em voz alta, caminho completo não.
+    return f"Achei {len(achados)}:\n" + "\n".join(f"{p.name} (pasta {p.parent.name or p.parent})" for p in achados)
 
 
 def registrar(mcp) -> None:
