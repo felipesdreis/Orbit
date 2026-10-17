@@ -8,7 +8,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta |
 | 2. Servidor + MCP + TTS | código pronto e testado com LLM/TTS falsos; **falta validar no PC** (Ollama e Kokoro reais) |
-| 3. Voz no PWA | pendente |
+| 3. Voz no PWA | código pronto e testado com microfone simulado; **falta testar com microfone real no Chrome do PC** |
 | 4. APK | pendente |
 | 5. Guia de novas tools | pendente |
 
@@ -55,6 +55,7 @@ tablet ──WebSocket /ws──▶ server/ (FastAPI) ──HTTP──▶ Ollama
 | PC → tablet | `{"type":"resposta","text":"...","emocao":"feliz","audio":true}` |
 | PC → tablet | `{"type":"imagem","url":"http://<ip>:8765/files/<id>.png"}` |
 | PC → tablet | `{"type":"audio","url":"http://<ip>:8765/files/<id>.wav"}`, um por frase, em ordem |
+| PC → tablet | `{"type":"fim"}` no fim de cada vez (depois do último `audio`): é o sinal para o tablet voltar a ouvir |
 
 `audio` em `resposta` é um acréscimo ao plano: com `false` (Kokoro fora do ar) o tablet deve falar o `text` com a voz nativa (fallback).
 
@@ -88,3 +89,41 @@ O `teste_ws` imprime cada mensagem com o tempo desde o envio e, no fim, `Tempo a
 | Frase | Resposta (s) | 1º áudio (s) |
 |---|---|---|
 | _pendente_ | | |
+
+## Etapa 3 — Voz no PWA
+
+Código em `app/src/app/voice/` e `app/src/app/api/`.
+
+- `orbit.service.ts`: a conversa inteira (ativação, escuta, filtro do nome, servidor, voz).
+- `stt-webspeech.ts`: reconhecimento pela Web Speech API (pt-BR), reinicia sozinho enquanto estiver ativo. `stt.ts`, `fala.ts` e `api/api.ts` são as interfaces; o plugin nativo do APK (etapa 4) entra no lugar do `stt-webspeech.ts`.
+- `fala-navegador.ts`: fila de áudios do servidor, com a voz nativa do navegador (`falarNativo`) quando o servidor avisa `audio: false`.
+- `ativador.ts`: o que acorda o Orbit. Hoje só o toque na carinha; a wake word entra aqui na v2.
+- `nome.ts`: filtro do nome "Orbit" (aceita `órbita`, `orbite`, `or bit`, `obit`... por palavra inteira).
+- `api/api-websocket.ts`: conexão com o servidor; reconecta sozinha a cada 2 s.
+
+### Como funciona
+
+1. **Standby:** carinha dormindo, microfone desligado. Tocar na carinha acorda (tocar nos botões do painel de teste não acorda).
+2. **Ativo:** o microfone ouve e a tela fica acesa (wake lock). Sem nenhuma fala por **15 min**, volta ao standby; toda fala reconhecida renova o prazo.
+3. **Filtro:** só frases com "Orbit" são enviadas ao PC. Depois de cada resposta há uma janela de **25 s** em que o nome não é exigido.
+4. **Half-duplex:** o microfone para ao enviar a fala e só volta depois que o servidor manda `fim` e o último áudio termina, para o Orbit não ouvir a própria voz.
+5. O rosto fica em "pensando" até o som começar e só então passa a "falando".
+
+### Como testar (Chrome do PC)
+
+```bash
+python -m server            # raiz do projeto, venv ativo; sobe em :8765
+cd app && npm start         # :4200
+```
+
+1. Abra `http://localhost:4200` no Chrome e **toque na carinha**. O Chrome pede o microfone: permita.
+2. Diga "Orbit, como está o PC?". A carinha deve ouvir, pensar, falar e voltar a ouvir. O painel de teste (⚙) mostra "Ouvi: … — enviado/ignorado".
+3. Diga algo **sem** "Orbit" logo depois da resposta (follow-up): deve ser enviado. Espere mais de 25 s e repita: deve ser ignorado.
+4. Diga "Orbit, mostra a tela": a imagem aparece sobre a carinha; toque nela para fechar.
+5. Pare o servidor e fale com o nome: aparece "Sem conexão com o PC".
+
+Servidor em outro endereço: `http://localhost:4200/?pc=192.168.0.10` (o endereço fica salvo).
+
+**Atenção:** no Chrome, o reconhecimento de voz usa o serviço do Google (precisa de internet). No tablet via `http://<IP>` o microfone é bloqueado (exige HTTPS); o APK da etapa 4 resolve com o plugin nativo.
+
+Testes automáticos: `cd app && CHROME_BIN=<caminho do chrome> npx ng test --watch=false`.

@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, inject, signal, viewChild } from '@angular/core';
 import { IonApp, IonButton, IonContent } from '@ionic/angular/standalone';
 import { FaceComponent } from './face/face.component';
 import { EMOCOES, ESTADOS, Emocao, Estado } from './face/face.types';
+import { AtivadorToque } from './voice/ativador';
+import { OrbitService } from './voice/orbit.service';
 
 @Component({
   selector: 'app-root',
@@ -10,19 +12,34 @@ import { EMOCOES, ESTADOS, Emocao, Estado } from './face/face.types';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements AfterViewInit, OnDestroy {
+  readonly orbit = inject(OrbitService);
   readonly estados = ESTADOS;
   readonly emocoes = EMOCOES;
 
-  estado = signal<Estado>('standby');
-  emocao = signal<Emocao>('neutro');
+  private palco = viewChild.required<ElementRef<HTMLElement>>('palco');
+
   painel = signal(true);
   demoRodando = signal(false);
 
   private demoTimers: ReturnType<typeof setTimeout>[] = [];
 
+  ngAfterViewInit() {
+    // O toque só acorda na área da carinha, para os botões do painel não ligarem o microfone.
+    new AtivadorToque(this.palco().nativeElement).onAcordar(() => this.orbit.acordar());
+  }
+
   ngOnDestroy() {
     this.pararDemo();
+  }
+
+  // Os botões do painel só mexem na aparência; a conversa real continua pelo OrbitService.
+  forcar(estado: Estado) {
+    this.orbit.estado.set(estado);
+  }
+
+  forcarEmocao(emocao: Emocao) {
+    this.orbit.emocao.set(emocao);
   }
 
   // Roteiro de teste: percorre os estados e as emoções sem precisar clicar.
@@ -41,7 +58,7 @@ export class AppComponent implements OnDestroy {
     ];
     this.demoRodando.set(true);
     for (const [quando, estado, emocao] of passos) {
-      this.demoTimers.push(setTimeout(() => (this.estado.set(estado), this.emocao.set(emocao)), quando));
+      this.demoTimers.push(setTimeout(() => (this.forcar(estado), this.forcarEmocao(emocao)), quando));
     }
     this.demoTimers.push(setTimeout(() => this.demoRodando.set(false), 23500));
   }
