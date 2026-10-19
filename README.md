@@ -8,7 +8,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta |
 | 2. Servidor + MCP + TTS | pronta e validada no PC (Gemma + Kokoro reais) |
-| 3. Voz no PWA | código pronto e testado com microfone simulado; **falta testar com microfone real no Chrome do PC** |
+| 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
 | 4. APK | pendente |
 | 5. Guia de novas tools | pendente |
 
@@ -93,6 +93,17 @@ Medido no PC do usuário (Gemma4-E4B-uncensored no Ollama + Kokoro `pm_santa` em
 | orbit procura o arquivo HANDOFF_ORBIT | `buscar_arquivo` | 10,13 | 11,59 |
 | orbit conta uma piada curta | nenhuma | 1,81 | 2,46 |
 
+Segunda medição (13 pedidos, com a voz completa, depois dos ajustes):
+
+| Tipo de pedido | Pedidos | 1º áudio |
+|---|---|---|
+| `screenshot` | 2 | 3,8 s e 3,9 s |
+| `pc_status` | 2 | 4,3 s e 8,7 s |
+| conversa simples | 4 | 4,2 a 11,4 s |
+| `buscar_arquivo` | 5 | 5,7 a 12,9 s |
+
+Mediana 7,3 s. O LLM responde por quase todo o tempo; o TTS leva de 0,4 a 1,4 s para a 1ª frase.
+
 O 1º teste incluiu a carga do modelo no Ollama, então o `pc_status` pode estar inflado. A busca de arquivo é a mais lenta; o log por parte mostra se o tempo vai para o LLM, para a tool ou para o TTS.
 
 ## Etapa 3 — Voz no PWA
@@ -128,6 +139,8 @@ cd app && npm start         # :4200
 5. Pare o servidor e fale com o nome: aparece "Sem conexão com o PC".
 
 Servidor em outro endereço: `http://localhost:4200/?pc=192.168.0.10` (o endereço fica salvo).
+
+**Sempre ative o `.venv` antes** (`.venv\Scripts\activate`). Fora dele, o servidor roda no Python do sistema (o do bot do Telegram) e o Kokoro não é encontrado.
 
 **Atenção:** no Chrome, o reconhecimento de voz usa o serviço do Google (precisa de internet). No tablet via `http://<IP>` o microfone é bloqueado (exige HTTPS); o APK da etapa 4 resolve com o plugin nativo.
 

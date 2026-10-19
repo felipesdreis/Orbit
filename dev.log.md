@@ -8,18 +8,46 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta ([PR #1](https://github.com/felipesdreis/Orbit/pull/1)) |
 | 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
-| 3. Voz no PWA | código pronto e testado com microfone simulado; falta testar com microfone real no Chrome do PC |
+| 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
 | 4. APK | pendente |
 | 5. Guia e README | pendente |
 
 ## Pendências abertas
 
-- Latência: a busca de arquivo levou 11,6 s até o 1º áudio (10,1 s só até a resposta do LLM). O servidor agora registra o tempo do LLM, da tool e do TTS; **medir de novo no PC** para ver onde está o gargalo.
-- **Testar a etapa 3 com microfone real no Chrome do PC** (roteiro no README, seção "Etapa 3").
+- **Latência (medida):** mediana de 7,3 s até o 1º áudio, pior caso 12,9 s; quase tudo é o LLM. Candidatos, do mais barato ao de maior ganho: (1) prompt pedindo no máximo duas frases curtas; (2) quebrar frases longas nas vírgulas para o TTS; (3) busca tratando `_`, `-` e espaço como iguais; (4) streaming do LLM para falar a 1ª frase enquanto o resto é gerado; (5) pular a 2ª passada do LLM nas tools de resposta curta. Aguardando decisão.
+- A busca de arquivo só ignora maiúsculas e acento: "discurso 152" não acha `Discurso_152_...` (pendência 3 acima).
+- Atualização de dependências do app (Angular 19 → 21 elimina as 7 vulnerabilidades de produção; sobram 13 de ferramentas de desenvolvimento sem correção real) e `npm start` só em `localhost`. Aguardando decisão.
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
 
 ---
+
+## 2026-10-19 — Validação no PC das etapas 2 (ajustes) e 3 (branch `homolog`)
+
+**Resultado:** o usuário confirmou que a voz funcionou e que todos os comandos funcionaram (Chrome do PC, microfone real, Kokoro `pm_santa` real, Gemma4-E4B). `pytest -q` no venv: 21 passando.
+
+**Tempos medidos (log do servidor, 13 pedidos)**
+
+| Tipo de pedido | Pedidos | 1º áudio |
+|---|---|---|
+| `screenshot` | 2 | 3,8 s e 3,9 s |
+| `pc_status` | 2 | 4,3 s e 8,7 s |
+| conversa simples | 4 | 4,2 a 11,4 s |
+| `buscar_arquivo` | 5 | 5,7 a 12,9 s |
+
+Mediana 7,3 s; pior caso 12,9 s.
+
+**Onde vai o tempo**
+- O LLM é o gargalo: no pior caso, 9,6 s de LLM, 1,8 s de tool e 1,4 s de TTS.
+- O TTS é pequeno: de 0,4 a 1,4 s para a 1ª frase (cerca de 0,4 s fixos mais ~0,015 s por caractere). Uma frase única de 225 caracteres levou 3,7 s.
+- A 2ª passada do LLM (depois da tool, só para reformular) leva de 0,9 a 5,3 s.
+- Resposta longa deixa o LLM lento (7,8 s numa conversa simples).
+- A tool de busca leva ~1,8 s quando acha e ~4,6 s quando não acha (perto do limite de 5 s).
+
+**Lições**
+- **Rodar fora do `.venv`:** o 1º teste foi feito com o Python do sistema (o mesmo do bot do Telegram) e sem Kokoro (`Kokoro indisponível`). O aviso do pytest `import multipart` e o `sys.prefix` denunciaram. Sempre ativar o `.venv` antes.
+- O `phonemizer: words count mismatch` aparece quando o Orbit lê nomes de arquivo com `_` e números (cosmético).
+- A conexão do tablet (192.168.3.64) chegou ao servidor: a rede e o firewall estão certos para a etapa 4.
 
 ## 2026-10-17 — Ajustes pós-validação da etapa 2 (`feat/ajustes-pos-validacao`)
 
