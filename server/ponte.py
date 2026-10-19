@@ -23,8 +23,12 @@ PROMPT_SISTEMA = (
     "Use as ferramentas só quando o pedido depender do PC "
     "(status do computador, achar um arquivo, mostrar a tela). "
     "Para conversa normal, responda direto, sem ferramenta. "
+    "Responda em no máximo duas frases curtas, a menos que peçam mais detalhes. "
     "Nunca fale caminhos completos, letras de unidade nem endereços da internet: "
-    "diga só o nome do arquivo e a pasta onde ele está."
+    "diga só o nome do arquivo e a pasta onde ele está. "
+    "Se o pedido exigir algo que você não tem ferramenta para fazer "
+    "(por exemplo, ler o conteúdo de um arquivo, abrir programas ou acessar a internet), "
+    "diga que não consegue; nunca invente o resultado."
 )
 
 _RODADAS_MAX = 4   # idas e vindas com tools por pergunta

@@ -1,6 +1,7 @@
 """Síntese de voz no PC: Kokoro-82M, voz pm_santa, em CPU (a VRAM é do Gemma)."""
 import io
 import logging
+import os
 import wave
 
 import numpy as np
@@ -26,8 +27,12 @@ class Kokoro:
     """Carrega o modelo uma única vez; `sintetizar` é bloqueante (rodar em thread)."""
 
     def __init__(self, voz: str = "pm_santa"):
-        from kokoro import KPipeline  # import tardio: só existe no venv do PC
+        import torch
+        from kokoro import KPipeline  # import tardio: só existem no venv do PC
 
+        # Deixa 2 núcleos livres: o Kokoro usa todos por padrão e disputa a CPU com o navegador
+        # que está tocando a frase anterior, o que faz o áudio engasgar no meio das palavras.
+        torch.set_num_threads(max(2, (os.cpu_count() or 4) - 2))
         self.voz = voz
         self._pipeline = KPipeline(lang_code="p", repo_id="hexgrad/Kokoro-82M", device="cpu")
 

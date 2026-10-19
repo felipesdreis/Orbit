@@ -1,5 +1,7 @@
 /** Saída de voz: fila de áudios do servidor e voz nativa (fallback). Abstrata para os testes. */
 export abstract class Fala {
+  /** Libera o áudio do navegador. Chamar dentro de um toque do usuário (a política de autoplay exige). */
+  abstract preparar(): void;
   /** Toca o áudio do servidor depois dos que já estão na fila. */
   abstract enfileirar(url: string): void;
   /** Fala o texto com a voz do aparelho (servidor sem Kokoro ou com erro). */

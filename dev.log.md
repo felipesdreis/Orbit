@@ -14,11 +14,37 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 ## Pendências abertas
 
-- **Latência (medida):** mediana de 7,3 s até o 1º áudio, pior caso 12,9 s; quase tudo é o LLM. Candidatos, do mais barato ao de maior ganho: (1) prompt pedindo no máximo duas frases curtas; (2) quebrar frases longas nas vírgulas para o TTS; (3) busca tratando `_`, `-` e espaço como iguais; (4) streaming do LLM para falar a 1ª frase enquanto o resto é gerado; (5) pular a 2ª passada do LLM nas tools de resposta curta. Aguardando decisão.
-- A busca de arquivo só ignora maiúsculas e acento: "discurso 152" não acha `Discurso_152_...` (pendência 3 acima).
+- **Latência (medida):** mediana de 7,3 s até o 1º áudio, pior caso 12,9 s; quase tudo é o LLM. Itens 1 a 3 (prompt curto, frases longas quebradas, busca) feitos no polimento. Ainda em aberto: (4) streaming do LLM para falar a 1ª frase enquanto o resto é gerado; (5) pular a 2ª passada do LLM nas tools de resposta curta.
+- **Hallucination:** o Orbit não lê o conteúdo de arquivos (as 3 tools só listam nomes) e já inventou um resumo; o prompt agora manda dizer que não consegue. Decidir se vale criar uma tool de leitura (`ler_arquivo`, `[leitura]`).
 - Atualização de dependências do app (Angular 19 → 21 elimina as 7 vulnerabilidades de produção; sobram 13 de ferramentas de desenvolvimento sem correção real) e `npm start` só em `localhost`. Aguardando decisão.
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
+
+---
+
+## 2026-10-19 — Polimento de voz e busca (`feat/polimento-voz-busca`)
+
+**Motivo (do teste no PC):** a primeira busca falhou ("discurso 152" não achou `Discurso_152_...`); a voz "picota nas palavras" (no meio da frase, não entre frases); o Orbit inventou um resumo de um arquivo que ele não tem como ler; e o log mostrou `phonemizer: words count mismatch`.
+
+**O que ficou pronto**
+- **Busca:** `_`, `-`, `.` e espaço valem o mesmo, e todas as palavras da busca precisam aparecer no nome ("discurso 152" acha `Discurso_152_Armagedom_30min.docx`).
+- **Voz sem engasgo:** o app baixa e decodifica cada WAV inteiro e toca pelo Web Audio, com os trechos agendados colados (sem pausa entre frases). `AudioContext` com `latencyHint: 'playback'`, liberado no toque (`Fala.preparar()`).
+- **Kokoro deixa 2 núcleos livres** (`torch.set_num_threads(max(2, cpus - 2))`) para não disputar a CPU com o navegador.
+- **Frases longas são quebradas** nas vírgulas (ou nas palavras) em pedaços de até ~100 caracteres: o 1º áudio só sai depois que a 1ª frase é sintetizada (uma frase de 225 caracteres levou 3,7 s).
+- **Bug corrigido:** o texto para a voz apagava o `_` em vez de trocar por espaço, e `Discurso_152_Armagedom` virava `Discurso152Armagedom` (origem do aviso do `phonemizer`).
+- **Prompt:** no máximo duas frases curtas; e, se não houver ferramenta para o pedido (ex.: ler o conteúdo de um arquivo), dizer que não consegue em vez de inventar.
+- Testes: 25 no servidor e 52 no app (6 novos do player).
+
+**Decisões e por quê**
+- **Causa do "picotar nas palavras" não provada:** o usuário disse que é no meio das palavras, o que descarta a pausa entre frases. As hipóteses eram (a) streaming do `<audio>` (os `206 Partial Content` do log) travando quando a CPU está saturada, e (b) o Kokoro disputando CPU com o navegador. Atacamos as duas; **só o teste no PC confirma**. Se persistir, o próximo passo é tirar o Kokoro do processo do servidor (outro processo), por causa da disputa do GIL do Python com o servidor de arquivos.
+- **Web Audio em vez de `<audio>`:** tocar da memória elimina o streaming como causa e dá agendamento preciso sem pausas.
+- **`parar()` por "geração":** tudo o que estava em andamento (downloads, falas nativas) é invalidado de uma vez ao dormir ou ao começar de novo.
+- **Pedaços de ~100 caracteres:** a síntese custa ~0,4 s fixos mais ~0,015 s por caractere, e a fala é bem mais lenta que a síntese; pedaços curtos adiantam o 1º áudio sem risco de a síntese não acompanhar.
+
+**Não verificado (precisa do PC)**
+- Se a picotada sumiu (em voz alta, com caixa de som, respostas longas).
+- Se o Orbit escuta a própria voz (o teste anterior foi com fone de ouvido, que não prova nada).
+- Que o Kokoro com 2 núcleos livres não ficou lento demais (comparar os `TTS da frase` do log).
 
 ---
 

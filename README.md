@@ -112,7 +112,7 @@ Código em `app/src/app/voice/` e `app/src/app/api/`.
 
 - `orbit.service.ts`: a conversa inteira (ativação, escuta, filtro do nome, servidor, voz).
 - `stt-webspeech.ts`: reconhecimento pela Web Speech API (pt-BR), reinicia sozinho enquanto estiver ativo. `stt.ts`, `fala.ts` e `api/api.ts` são as interfaces; o plugin nativo do APK (etapa 4) entra no lugar do `stt-webspeech.ts`.
-- `fala-navegador.ts`: fila de áudios do servidor, com a voz nativa do navegador (`falarNativo`) quando o servidor avisa `audio: false`.
+- `fala-navegador.ts`: baixa e decodifica cada WAV do servidor inteiro (em paralelo com o que toca) e agenda os trechos colados um no outro pelo Web Audio, tocando da memória (sem engasgo de streaming nem pausa entre frases). Com a voz nativa do navegador (`falarNativo`) quando o servidor avisa `audio: false`.
 - `ativador.ts`: o que acorda o Orbit. Hoje só o toque na carinha; a wake word entra aqui na v2.
 - `nome.ts`: filtro do nome "Orbit" (aceita `órbita`, `orbite`, `or bit`, `obit`... por palavra inteira).
 - `api/api-websocket.ts`: conexão com o servidor; reconecta sozinha a cada 2 s.

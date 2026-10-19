@@ -43,6 +43,7 @@ export class OrbitService {
   /** Toque na tela: acorda; já acordado, só renova o prazo. */
   acordar(): void {
     this.aviso.set(null);
+    this.fala.preparar(); // dentro do toque: é o que libera o áudio do navegador
     if (this.estado() !== 'standby') return this.renovar();
     if (!this.stt.suportado) return this.aviso.set('Este navegador não tem reconhecimento de voz. Use o Chrome.');
     this.estado.set('ouvindo');

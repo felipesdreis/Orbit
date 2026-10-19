@@ -33,6 +33,34 @@ def test_frases_separam_e_grudam_as_curtas():
     assert dividir_frases("   ") == []
 
 
+def test_frases_nao_colam_as_palavras_de_nomes_de_arquivo():
+    # "_" virava nada e "Discurso_152" era falado como "Discurso152"
+    assert dividir_frases("Achei Discurso_152_Armagedom_30min.docx na pasta Documentos.") == [
+        "Achei Discurso 152 Armagedom 30min.docx na pasta Documentos."
+    ]
+
+
+def test_frases_longas_sao_quebradas_nas_virgulas():
+    longa = (
+        "O computador está com a CPU em doze por cento, a memória em quarenta por cento de uso, "
+        "o disco com mais da metade livre, e ele está ligado há quase três dias seguidos sem reiniciar."
+    )
+    pedacos = dividir_frases(longa)
+    assert len(pedacos) >= 2 and all(len(p) <= 100 for p in pedacos)
+    assert " ".join(pedacos) == longa  # nada se perde nem muda de ordem
+    assert pedacos[0].endswith(",")  # o 1º pedaço fecha numa vírgula: a voz começa mais cedo
+
+
+def test_frase_longa_sem_virgula_quebra_nas_palavras():
+    sem_virgula = " ".join(["palavra"] * 40)  # 319 caracteres
+    pedacos = dividir_frases(sem_virgula)
+    assert all(len(p) <= 100 for p in pedacos) and " ".join(pedacos) == sem_virgula
+
+
+def test_frases_curtas_ficam_como_estao():
+    assert dividir_frases("Tudo certo por aqui. O PC está ótimo hoje!") == ["Tudo certo por aqui.", "O PC está ótimo hoje!"]
+
+
 def test_wav_tem_24khz_mono_16bits():
     with wave.open(BytesIO(tts.para_wav(np.zeros(2400, dtype=np.float32)))) as w:
         assert (w.getframerate(), w.getnchannels(), w.getsampwidth(), w.getnframes()) == (24000, 1, 2, 2400)

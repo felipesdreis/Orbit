@@ -33,6 +33,14 @@ def test_busca(tmp_path):
     assert [p.name for p in r] == ["Relatório Final.txt"]
     assert len(buscar_arquivo.buscar("foto", [tmp_path])) == 5
     assert "Não achei" in buscar_arquivo.formatar("zzz", buscar_arquivo.buscar("zzz", [tmp_path]))
+    # Separadores tratados como iguais e todas as palavras exigidas (o caso real: "discurso 152").
+    (tmp_path / "docs" / "Discurso_152_Armagedom_30min.docx").write_text("x")
+    nomes = lambda q: [p.name for p in buscar_arquivo.buscar(q, [tmp_path])]
+    assert nomes("discurso 152") == ["Discurso_152_Armagedom_30min.docx"]
+    assert nomes("152 armagedom") == ["Discurso_152_Armagedom_30min.docx"]
+    assert nomes("Discurso_152_Armagedom_30min.docx") == ["Discurso_152_Armagedom_30min.docx"]
+    assert nomes("discurso 999") == []
+    assert nomes("relatório-final") == ["Relatório Final.txt"]
     # Resultado é falado em voz alta: só nome e pasta, nunca o caminho completo.
     falado = buscar_arquivo.formatar("relatorio", r)
     assert "Relatório Final.txt (pasta docs)" in falado and str(tmp_path) not in falado

@@ -11,7 +11,7 @@ module.exports = function (config) {
     reporters: ['progress'],
     browsers: ['ChromeHeadlessCI'],
     customLaunchers: {
-      ChromeHeadlessCI: { base: 'ChromeHeadless', flags: ['--no-sandbox'] },
+      ChromeHeadlessCI: { base: 'ChromeHeadless', flags: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required'] },
     },
     restartOnFileChange: false,
   });

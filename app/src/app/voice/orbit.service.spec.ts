@@ -37,8 +37,10 @@ class FalaFalsa extends Fala {
   urls: string[] = [];
   nativas: string[] = [];
   paradas = 0;
+  preparou = 0;
   private liberar: Array<() => void> = [];
   private comecou: () => void = () => {};
+  preparar() { this.preparou++; }
   enfileirar(url: string) { this.urls.push(url); }
   falarNativo(t: string) { this.nativas.push(t); }
   ociosa() { return new Promise<void>((ok) => this.liberar.push(ok)); }
@@ -94,6 +96,11 @@ describe('OrbitService', () => {
     orbit.acordar();
     expect(orbit.estado()).toBe('ouvindo');
     expect(stt.ouvindo).toBeTrue();
+  });
+
+  it('o toque libera o áudio do navegador', () => {
+    orbit.acordar();
+    expect(fala.preparou).toBe(1);
   });
 
   it('sem reconhecimento de voz, avisa e continua em standby', () => {
