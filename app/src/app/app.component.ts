@@ -35,8 +35,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.pararDemo();
   }
 
-  conectarA(endereco: string) {
-    this.api.definirServidor(endereco);
+  conectarA(campo: HTMLInputElement) {
+    this.api.definirServidor(campo.value);
+    campo.value = this.api.servidor(); // mostra o endereço normalizado (ou o que segue valendo, se o texto era vazio)
   }
 
   // Os botões do painel só mexem na aparência; a conversa real continua pelo OrbitService.

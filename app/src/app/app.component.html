@@ -22,8 +22,8 @@
         <div class="grupo">
           <span>PC</span>
           <input class="endereco" #pc type="text" inputmode="url" autocomplete="off" spellcheck="false"
-            [value]="api.servidor()" aria-label="Endereço do PC" (keydown.enter)="conectarA(pc.value)" />
-          <ion-button size="small" (click)="conectarA(pc.value)">Conectar</ion-button>
+            [value]="api.servidor()" aria-label="Endereço do PC" (keydown.enter)="conectarA(pc)" />
+          <ion-button size="small" (click)="conectarA(pc)">Conectar</ion-button>
           <span class="conexao" [class.ok]="api.conectado()">{{ api.conectado() ? 'conectado' : 'sem conexão' }}</span>
         </div>
         <div class="grupo">
