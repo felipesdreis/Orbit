@@ -1,5 +1,6 @@
 """Tool buscar_arquivo: procura arquivos pelo nome nas pastas do usuário."""
 import os
+import re
 import time
 import unicodedata
 from pathlib import Path
@@ -19,6 +20,11 @@ def _norm(s: str) -> str:
     return "".join(c for c in s if not unicodedata.combining(c))
 
 
+def _palavras(s: str) -> list[str]:
+    """Texto normalizado em palavras: '_', '-', '.' e espaço separam igual."""
+    return re.findall(r"[a-z0-9]+", _norm(s))
+
+
 def raizes() -> list[Path]:
     env = os.environ.get("ORBIT_BUSCA_RAIZES", "")
     lista = [Path(p) for p in env.split(os.pathsep) if p.strip()]
@@ -26,8 +32,12 @@ def raizes() -> list[Path]:
 
 
 def buscar(nome: str, raizes_: list[Path], limite_s: float = LIMITE_S) -> list[Path]:
-    """Até 5 arquivos/pastas cujo nome contém `nome` (sem acento/maiúscula)."""
-    alvo = _norm(nome.strip())
+    """Até 5 arquivos/pastas cujo nome contém TODAS as palavras de `nome`.
+
+    Sem acento/maiúscula e com '_', '-', '.' e espaço tratados como iguais:
+    "discurso 152" acha "Discurso_152_Armagedom_30min.docx".
+    """
+    alvo = _palavras(nome)
     if not alvo:
         return []
     fim = time.monotonic() + limite_s
@@ -41,7 +51,8 @@ def buscar(nome: str, raizes_: list[Path], limite_s: float = LIMITE_S) -> list[P
             if len(Path(pasta).parts) - base >= MAX_PROFUNDIDADE:
                 subs[:] = []
             for n in arqs + subs:
-                if alvo in _norm(n):
+                chave = " ".join(_palavras(n))
+                if all(palavra in chave for palavra in alvo):
                     achados.append(Path(pasta) / n)
                     if len(achados) >= MAX_RESULTADOS:
                         return achados
@@ -51,7 +62,8 @@ def buscar(nome: str, raizes_: list[Path], limite_s: float = LIMITE_S) -> list[P
 def formatar(nome: str, achados: list[Path]) -> str:
     if not achados:
         return f"Não achei nada com o nome {nome}."
-    return f"Achei {len(achados)}:\n" + "\n".join(str(p) for p in achados)
+    # Só nome e pasta final: o resultado é falado em voz alta, caminho completo não.
+    return f"Achei {len(achados)}:\n" + "\n".join(f"{p.name} (pasta {p.parent.name or p.parent})" for p in achados)
 
 
 def registrar(mcp) -> None:

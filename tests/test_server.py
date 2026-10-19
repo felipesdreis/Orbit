@@ -33,6 +33,67 @@ def test_frases_separam_e_grudam_as_curtas():
     assert dividir_frases("   ") == []
 
 
+def test_frases_nao_colam_as_palavras_de_nomes_de_arquivo():
+    # "_" virava nada e "Discurso_152" era falado como "Discurso152"
+    assert dividir_frases("Achei Discurso_152_Armagedom_30min.docx na pasta Documentos.") == [
+        "Achei Discurso 152 Armagedom 30min.docx na pasta Documentos."
+    ]
+
+
+def test_frases_longas_sao_quebradas_nas_virgulas():
+    longa = (
+        "O computador está com a CPU em doze por cento, a memória em quarenta por cento de uso, "
+        "o disco com mais da metade livre, e ele está ligado há quase três dias seguidos sem reiniciar."
+    )
+    pedacos = dividir_frases(longa)
+    assert len(pedacos) >= 2 and all(len(p) <= 100 for p in pedacos)
+    assert " ".join(pedacos) == longa  # nada se perde nem muda de ordem
+    assert pedacos[0].endswith(",")  # o 1º pedaço fecha numa vírgula: a voz começa mais cedo
+
+
+def test_frase_longa_sem_virgula_quebra_nas_palavras():
+    sem_virgula = " ".join(["palavra"] * 40)  # 319 caracteres
+    pedacos = dividir_frases(sem_virgula)
+    assert all(len(p) <= 100 for p in pedacos) and " ".join(pedacos) == sem_virgula
+
+
+def test_frases_curtas_ficam_como_estao():
+    assert dividir_frases("Tudo certo por aqui. O PC está ótimo hoje!") == ["Tudo certo por aqui.", "O PC está ótimo hoje!"]
+
+
+def test_threads_do_kokoro_ficam_entre_2_e_4_e_aceitam_override(monkeypatch):
+    monkeypatch.delenv("ORBIT_TTS_THREADS", raising=False)
+    for fisicos, esperado in [(None, 2), (2, 2), (4, 2), (6, 3), (8, 4), (16, 4)]:
+        monkeypatch.setattr(tts.psutil, "cpu_count", lambda logical=True, f=fisicos: f)
+        monkeypatch.setattr(tts.os, "cpu_count", lambda: 8)
+        assert tts.threads() == esperado  # None: sem a contagem física, usa metade dos 8 lógicos (= 4 físicos)
+    monkeypatch.setenv("ORBIT_TTS_THREADS", "6")
+    assert tts.threads() == 6
+    monkeypatch.setenv("ORBIT_TTS_THREADS", "zero")  # valor inválido cai no padrão
+    assert 2 <= tts.threads() <= 4
+
+
+def test_baixar_prioridade_pede_prioridade_baixa_e_nao_quebra_se_falhar(monkeypatch):
+    from server import processo
+
+    chamadas = []
+
+    class Falso:
+        def nice(self, valor):
+            chamadas.append(valor)
+
+    monkeypatch.setattr(processo.psutil, "Process", Falso)
+    processo.baixar_prioridade()
+    assert len(chamadas) == 1
+
+    class Proibido:
+        def nice(self, valor):
+            raise PermissionError("sem permissão")
+
+    monkeypatch.setattr(processo.psutil, "Process", Proibido)
+    processo.baixar_prioridade()  # só avisa no log; o servidor sobe do mesmo jeito
+
+
 def test_wav_tem_24khz_mono_16bits():
     with wave.open(BytesIO(tts.para_wav(np.zeros(2400, dtype=np.float32)))) as w:
         assert (w.getframerate(), w.getnchannels(), w.getsampwidth(), w.getnframes()) == (24000, 1, 2, 2400)
@@ -150,6 +211,7 @@ def test_ws_resposta_emocao_e_um_audio_por_frase_em_ordem():
         ws.send_json({"type": "fala", "text": "orbit como está o pc"})
         msgs = receber_ate_audios(ws, 2)
         assert [m["type"] for m in msgs] == ["pensando", "resposta", "audio", "audio"]
+        assert ws.receive_json() == {"type": "fim"}
         assert msgs[1] == {"type": "resposta", "text": "Está tudo certo por aqui. O PC está ótimo hoje!", "emocao": "feliz", "audio": True}
         assert falso.frases == ["Está tudo certo por aqui.", "O PC está ótimo hoje!"]
         wav = cliente.get(msgs[2]["url"].replace("http://testserver", ""))
@@ -177,6 +239,7 @@ def test_ws_sem_tts_avisa_o_tablet_para_usar_a_voz_nativa(monkeypatch):
         ws.send_json({"type": "fala", "text": "orbit oi"})
         assert ws.receive_json() == {"type": "pensando"}
         assert ws.receive_json() == {"type": "resposta", "text": "Oi!", "emocao": "curioso", "audio": False}
+        assert ws.receive_json() == {"type": "fim"}
 
 
 def test_ws_falha_da_ponte_vira_resposta_amigavel():
@@ -188,6 +251,8 @@ def test_ws_falha_da_ponte_vira_resposta_amigavel():
         ws.send_json({"type": "fala", "text": "orbit oi"})
         ws.receive_json()
         assert ws.receive_json()["text"].startswith("Não consegui")
+        assert ws.receive_json()["type"] == "audio"  # a mensagem de erro também é falada
+        assert ws.receive_json() == {"type": "fim"}
 
 
 def test_files_desconhecido_da_404():

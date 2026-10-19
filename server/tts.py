@@ -1,9 +1,11 @@
 """Síntese de voz no PC: Kokoro-82M, voz pm_santa, em CPU (a VRAM é do Gemma)."""
 import io
 import logging
+import os
 import wave
 
 import numpy as np
+import psutil
 
 log = logging.getLogger("orbit.tts")
 
@@ -22,12 +24,31 @@ def para_wav(amostras: np.ndarray) -> bytes:
     return buf.getvalue()
 
 
+def threads() -> int:
+    """Quantos núcleos o Kokoro usa: poucos, para sobrar CPU ao navegador que está tocando a voz.
+
+    Padrão: metade dos núcleos físicos, entre 2 e 4 (acima disso o ganho é pequeno e a CPU satura,
+    o que faz o áudio engasgar). `ORBIT_TTS_THREADS` sobrescreve, para testar outros valores.
+    """
+    valor = os.environ.get("ORBIT_TTS_THREADS", "")
+    if valor.isdigit() and int(valor) > 0:
+        return int(valor)
+    fisicos = psutil.cpu_count(logical=False) or (os.cpu_count() or 4) // 2
+    return max(2, min(4, fisicos // 2))
+
+
 class Kokoro:
     """Carrega o modelo uma única vez; `sintetizar` é bloqueante (rodar em thread)."""
 
     def __init__(self, voz: str = "pm_santa"):
-        from kokoro import KPipeline  # import tardio: só existe no venv do PC
+        import torch
+        from kokoro import KPipeline  # import tardio: só existem no venv do PC
 
+        # O Kokoro usa todos os núcleos por padrão e disputa a CPU com o navegador que está
+        # tocando a frase anterior, o que faz o áudio engasgar no meio das palavras.
+        n = threads()
+        torch.set_num_threads(n)
+        log.info("Kokoro com %d threads de CPU", n)
         self.voz = voz
         self._pipeline = KPipeline(lang_code="p", repo_id="hexgrad/Kokoro-82M", device="cpu")
 
