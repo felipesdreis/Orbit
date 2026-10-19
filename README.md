@@ -10,7 +10,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 | 2. Servidor + MCP + TTS | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
 | 4. APK | pronta e validada no tablet (Samsung, Android 11) |
-| 5. Guia de novas tools | pendente |
+| 5. Guia de novas tools | pronta (`tools/GUIA_NOVA_TOOL.md`, validada criando a tool `hora_data` só com o guia) |
 
 ## Etapa 1 — Carinha
 
@@ -186,3 +186,20 @@ No tablet, o reconhecimento de voz usa o serviço de voz do Android (normalmente
 - `AndroidManifest.xml`: `usesCleartextTraffic="true"`, porque o Android 9+ bloqueia tráfego sem HTTPS para endereços que não sejam `localhost`.
 - Ícone e tela de abertura: gerados a partir de `app/assets/` (já estão em `res/`). Para refazer: `cd app && npx @capacitor/assets generate --android`.
 - Depois de mexer no código do app: `cd app && npm run build:android` (faz o `ng build` e o `cap sync`).
+
+## Etapa 5 — Guia para criar tools
+
+O guia completo está em [`tools/GUIA_NOVA_TOOL.md`](tools/GUIA_NOVA_TOOL.md): receita mínima, regras para o modelo pequeno acertar, convenção `[leitura]`/`[escrita]`, como testar e checklist.
+
+Resumo: criar uma tool é soltar um `.py` em `tools/` com `registrar(mcp)` e `@mcp.tool()`. Não há lista para atualizar.
+
+```text
+python -m server.testar_tool --listar
+python -m server.testar_tool hora_data "{}"
+pytest -q
+```
+
+- `server/testar_tool.py` chama uma tool isolada (sem tablet e sem LLM) e mostra retorno, tempo e se seria falado, exibido como imagem ou tratado como erro.
+- `tests/test_tools.py` reprova automaticamente tool sem `[leitura]`/`[escrita]`, com descrição de mais de uma linha, com mais de 2 parâmetros ou com nome fora do padrão.
+- `tools/hora_data.py` (hora e data em português falado) é a tool de exemplo criada seguindo só o guia.
+- `tools/calcular.py` (contas) e `tools/clima.py` (tempo e previsão em Mogi Guaçu, ou outra cidade, via Open-Meteo, sem chave de API) são as tools seguintes, criadas pelo mesmo guia.

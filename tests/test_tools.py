@@ -6,12 +6,14 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-TOOLS = Path(__file__).resolve().parent.parent / "tools"
-sys.path.insert(0, str(TOOLS))
+import buscar_arquivo  # tools/ já está no caminho de importação (tests/conftest.py)
+import pc_status
+import screenshot
 
-import buscar_arquivo  # noqa: E402
-import pc_status  # noqa: E402
-import screenshot  # noqa: E402
+TOOLS = Path(__file__).resolve().parent.parent / "tools"
+
+
+NUCLEO = {"pc_status", "buscar_arquivo", "screenshot"}
 
 
 def test_coletar():
@@ -76,7 +78,7 @@ async def test_servidor_stdio():
         async with ClientSession(r, w) as s:
             await s.initialize()
             nomes = {t.name for t in (await s.list_tools()).tools}
-            assert nomes == {"pc_status", "buscar_arquivo", "screenshot"}
+            assert NUCLEO <= nomes  # tools novas não quebram o teste: só o núcleo é obrigatório
             res = await s.call_tool("pc_status", {})
             assert "CPU" in res.content[0].text
 
@@ -90,4 +92,17 @@ async def test_modulo_quebrado_nao_derruba(tmp_path):
         async with ClientSession(r, w) as s:
             await s.initialize()
             nomes = {t.name for t in (await s.list_tools()).tools}
-            assert nomes == {"pc_status", "buscar_arquivo", "screenshot"}
+            assert NUCLEO <= nomes and "quebrado" not in nomes
+
+
+async def test_toda_tool_segue_a_convencao_do_guia():
+    """tools/GUIA_NOVA_TOOL.md: risco declarado, descrição de uma linha e poucos parâmetros."""
+    async with stdio_client(StdioServerParameters(command=sys.executable, args=[str(TOOLS / "server.py")])) as (r, w):
+        async with ClientSession(r, w) as s:
+            await s.initialize()
+            for t in (await s.list_tools()).tools:
+                descricao = (t.description or "").strip()
+                assert descricao.startswith(("[leitura]", "[escrita]")), f"{t.name}: a descrição deve começar com [leitura] ou [escrita]"
+                assert "\n" not in descricao and len(descricao) <= 200, f"{t.name}: a descrição deve ter uma linha só e até 200 caracteres"
+                assert len(t.inputSchema.get("properties", {})) <= 2, f"{t.name}: use no máximo 2 parâmetros"
+                assert t.name.islower() and t.name.replace("_", "").isalnum(), f"{t.name}: nome em minúsculas, com _ e sem acento"
