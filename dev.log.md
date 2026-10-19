@@ -46,6 +46,8 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 - O processo do servidor passa a rodar em prioridade **abaixo do normal** (`server/processo.py`), para o Chrome e o áudio do sistema passarem na frente quando a CPU está disputada.
 - A VRAM cheia (Gemma ~5,4 GB mais o navegador e o resto) não causa picote de áudio, mas pode atrasar o LLM.
 
+**Filtro do nome:** o Chrome devolveu "hornet" para "Orbit" (e "horbit", que já era aceito). "hornet" fica a distância 3 de "orbit", longe demais para a regra automática, então entrou na lista de variantes (com testes negativos `horn`, `hornets`, `honest`). Regra: variante só entra por evidência do painel "Ouvi:", porque cada uma abre espaço para falso positivo.
+
 **Não verificado (precisa do PC)**
 - Se a picotada sumiu (em voz alta, com caixa de som, respostas longas).
 - Se o próprio WAV tem o picote: tocar um arquivo de `%TEMP%\orbit_audio\` num player. Se picotar lá, o problema é da síntese e não da reprodução.

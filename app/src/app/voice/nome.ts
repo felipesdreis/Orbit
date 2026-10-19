@@ -5,9 +5,11 @@
 //   a distância de Levenshtein <= 1 de "orbit". Os negativos pedidos (habit,
 //   rabit, robô, orbital, orgulho, bit, ordem, cabide) ficam todos a >= 2,
 //   então não foi preciso restringir a regra (ex.: primeira letra).
+// - Variantes que o Chrome pt-BR realmente devolveu (vistas no painel "Ouvi:"), mesmo longe de
+//   "orbit": "horbit", "hornet". Só entram por evidência: cada uma abre espaço para falso positivo.
 // - Palavras adjacentes são juntadas ("or bit" -> "orbit") mas só contra a
 //   lista de variantes, sem distância, para evitar falsos positivos tipo "ou bit".
-const VARIANTES = new Set(['orbit', 'orbite', 'orbiti', 'orbita', 'obit', 'orbet', 'horbit']);
+const VARIANTES = new Set(['orbit', 'orbite', 'orbiti', 'orbita', 'obit', 'orbet', 'horbit', 'hornet']);
 
 function levenshtein(a: string, b: string): number {
   let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
