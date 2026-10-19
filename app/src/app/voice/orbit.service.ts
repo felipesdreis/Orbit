@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Api } from '../api/api';
 import { MsgServidor } from '../api/mensagens';
 import { Emocao, Estado } from '../face/face.types';
@@ -37,7 +38,11 @@ export class OrbitService {
       if (this.estado() === 'pensando') this.estado.set('falando');
     });
     this.api.conectar();
-    document.addEventListener('visibilitychange', () => this.estado() !== 'standby' && this.segurarTela());
+    document.addEventListener('visibilitychange', () => {
+      // No APK, ir para segundo plano libera o microfone (o Android não deixa um app em segundo plano ouvir).
+      if (document.hidden && Capacitor.isNativePlatform()) this.dormir();
+      else if (this.estado() !== 'standby') void this.segurarTela();
+    });
   }
 
   /** Toque na tela: acorda; já acordado, só renova o prazo. */
@@ -78,7 +83,7 @@ export class OrbitService {
     if (!dentroDoFollowup && !contemOrbit(texto)) return this.ouvido.set({ texto, enviado: false });
     if (!this.api.enviarFala(texto)) {
       this.ouvido.set({ texto, enviado: false });
-      return this.aviso.set('Sem conexão com o PC. Confira se o servidor está rodando.');
+      return this.aviso.set('Sem conexão com o PC. Confira se o servidor está rodando e o endereço do PC em ⚙.');
     }
     this.ouvido.set({ texto, enviado: true });
     this.aviso.set(null);
@@ -93,8 +98,13 @@ export class OrbitService {
     if (erro === 'not-allowed' || erro === 'service-not-allowed') {
       this.aviso.set('Microfone bloqueado. Libere a permissão do microfone no navegador.');
       this.dormir();
+    } else if (erro === 'service-unavailable') {
+      this.aviso.set('Este aparelho não tem reconhecimento de voz. Instale ou atualize o app Google.');
+      this.dormir();
     } else if (erro === 'network') {
-      this.aviso.set('O reconhecimento de voz precisa de internet neste navegador.');
+      this.aviso.set('O reconhecimento de voz precisa de internet (ou do pacote de voz offline em português).');
+    } else if (erro === 'audio-capture') {
+      this.aviso.set('Não consegui usar o microfone. Outro app pode estar usando.');
     }
   }
 

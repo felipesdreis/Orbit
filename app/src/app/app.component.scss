@@ -76,3 +76,24 @@ ion-content {
   padding: 2px 0 6px;
   color: var(--orbit-ciano);
 }
+
+.endereco {
+  width: 190px;
+  margin-right: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(94, 231, 255, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #cfe9f0;
+  font: 14px sans-serif;
+}
+
+.conexao {
+  width: auto !important;
+  margin-left: 8px;
+  color: #ffb199;
+
+  &.ok {
+    color: var(--orbit-ciano);
+  }
+}

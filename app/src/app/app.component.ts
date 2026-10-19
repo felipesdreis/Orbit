@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, inject, signal, viewChild } from '@angular/core';
 import { IonApp, IonButton, IonContent } from '@ionic/angular/standalone';
+import { Api } from './api/api';
 import { FaceComponent } from './face/face.component';
 import { EMOCOES, ESTADOS, Emocao, Estado } from './face/face.types';
 import { AtivadorToque } from './voice/ativador';
@@ -14,6 +15,7 @@ import { OrbitService } from './voice/orbit.service';
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   readonly orbit = inject(OrbitService);
+  readonly api = inject(Api);
   readonly estados = ESTADOS;
   readonly emocoes = EMOCOES;
 
@@ -31,6 +33,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.pararDemo();
+  }
+
+  conectarA(campo: HTMLInputElement) {
+    this.api.definirServidor(campo.value);
+    campo.value = this.api.servidor(); // mostra o endereço normalizado (ou o que segue valendo, se o texto era vazio)
   }
 
   // Os botões do painel só mexem na aparência; a conversa real continua pelo OrbitService.

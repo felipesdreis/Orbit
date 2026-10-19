@@ -21,9 +21,11 @@ class SttFalso extends Stt {
 
 class ApiFalsa extends Api {
   conectado = signal(true);
+  servidor = signal('pc:8765');
   enviadas: string[] = [];
   private cb: (m: MsgServidor) => void = () => {};
   conectar() {}
+  definirServidor(e: string) { this.servidor.set(e); }
   enviarFala(t: string) {
     if (!this.conectado()) return false;
     this.enviadas.push(t);
@@ -232,6 +234,20 @@ describe('OrbitService', () => {
     tempo(ESPERA_MAX_MS + 1000);
     expect(orbit.estado()).toBe('ouvindo');
     expect(stt.ouvindo).toBeTrue();
+  });
+
+  it('sem serviço de reconhecimento de voz no aparelho: avisa e volta ao standby', () => {
+    orbit.acordar();
+    stt.falhar('service-unavailable');
+    expect(orbit.aviso()).toContain('reconhecimento de voz');
+    expect(orbit.estado()).toBe('standby');
+  });
+
+  it('erro de microfone ocupado só avisa e continua ouvindo', () => {
+    orbit.acordar();
+    stt.falhar('audio-capture');
+    expect(orbit.aviso()).toContain('microfone');
+    expect(orbit.estado()).toBe('ouvindo');
   });
 
   it('microfone bloqueado: avisa e volta ao standby', () => {

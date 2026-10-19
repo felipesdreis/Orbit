@@ -9,7 +9,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 | 1. Carinha (PWA, sem voz) | pronta |
 | 2. Servidor + MCP + TTS | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
-| 4. APK | pendente |
+| 4. APK | pronta e validada no tablet (Samsung, Android 11) |
 | 5. Guia de novas tools | pendente |
 
 ## Etapa 1 — Carinha
@@ -146,3 +146,43 @@ Servidor em outro endereço: `http://localhost:4200/?pc=192.168.0.10` (o endere�
 **Atenção:** no Chrome, o reconhecimento de voz usa o serviço do Google (precisa de internet). No tablet via `http://<IP>` o microfone é bloqueado (exige HTTPS); o APK da etapa 4 resolve com o plugin nativo.
 
 Testes automáticos: `cd app && CHROME_BIN=<caminho do chrome> npx ng test --watch=false`.
+
+## Etapa 4 — APK (tablet Android)
+
+O mesmo app Angular roda no tablet dentro do Capacitor 7. A diferença está em dois lugares: o reconhecimento de voz é o **nativo do Android** (`stt-nativo.ts`, plugin `@capacitor-community/speech-recognition`) em vez da Web Speech API, e o endereço do PC é informado na tela (campo **PC** do painel ⚙), porque no tablet não existe o `?pc=` da URL.
+
+### Compilar o APK (no PC)
+
+Pré-requisitos (os mesmos do Locked-In): JDK 21 em `C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot` e o Android SDK em `C:\Android` com as licenças aceitas (o Gradle baixa sozinho a plataforma `android-35` se faltar). Caminhos diferentes: edite as duas linhas `set` no topo do `build-apk.bat`.
+
+```bat
+build-apk.bat
+```
+
+Pergunta o nome do APK (Enter = `orbit`) e gera `app\android\app\build\outputs\apk\debug\<nome>.apk`. A 1ª vez baixa o Gradle e as dependências (alguns minutos, precisa de internet). Copie o APK para o tablet e instale (permita "fontes desconhecidas").
+
+### Primeiro uso no tablet
+
+1. No PC: `python -m server` (porta 8765 liberada no firewall; PC e tablet na mesma rede; de preferência reserve um IP fixo para o PC no roteador).
+2. No tablet: abra o Orbit, abra o painel **⚙**, escreva o IP do PC no campo **PC** (ex.: `192.168.3.10`) e toque em **Conectar**. O painel mostra "conectado". O endereço fica salvo.
+3. Toque na carinha: o Android pede o microfone (permita). Diga "Orbit, como está o PC?".
+
+No tablet, o reconhecimento de voz usa o serviço de voz do Android (normalmente o app **Google**): ele precisa estar instalado e atualizado, e o **Android System WebView** também. Sem internet, instale o pacote de voz offline em português (Configurações do Google → Voz → Reconhecimento offline).
+
+### Se algo não funcionar
+
+| Sintoma | O que olhar |
+|---|---|
+| "Sem conexão com o PC" | IP no campo PC; servidor rodando; firewall da porta 8765; mesma rede |
+| "Este aparelho não tem reconhecimento de voz" | instalar/atualizar o app Google |
+| "Microfone bloqueado" | Configurações do Android → Apps → Orbit → Permissões → Microfone |
+| "precisa de internet" | baixar o pacote de voz offline em português |
+| Um "bip" a cada reinício da escuta | me avise: dá para silenciar o fluxo de notificação durante a janela ativa |
+| Sai do app e o Orbit para de ouvir | é proposital: em segundo plano o Android não deixa o app usar o microfone |
+
+### Detalhes do projeto Android
+
+- `app/capacitor.config.ts`: a página é servida em `http://localhost` (`androidScheme: 'http'`), e não em `https`, para o `ws://<IP-do-PC>` não ser bloqueado como conteúdo misto. `localhost` continua sendo um contexto seguro (microfone, Web Audio e wake lock funcionam).
+- `AndroidManifest.xml`: `usesCleartextTraffic="true"`, porque o Android 9+ bloqueia tráfego sem HTTPS para endereços que não sejam `localhost`.
+- Ícone e tela de abertura: gerados a partir de `app/assets/` (já estão em `res/`). Para refazer: `cd app && npx @capacitor/assets generate --android`.
+- Depois de mexer no código do app: `cd app && npm run build:android` (faz o `ng build` e o `cap sync`).

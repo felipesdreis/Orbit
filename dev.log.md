@@ -9,7 +9,7 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 | 1. Carinha (PWA, sem voz) | pronta ([PR #1](https://github.com/felipesdreis/Orbit/pull/1)) |
 | 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
-| 4. APK | pendente |
+| 4. APK | pronta e validada no tablet (Samsung, Android 11) |
 | 5. Guia e README | pendente |
 
 ## Pendências abertas
@@ -19,6 +19,42 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 - Vulnerabilidades restantes (13, só de ferramentas de desenvolvimento, sem correção publicada): resolver só trocando o builder webpack e o Karma. Risco aceito por ora.
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
+
+---
+
+## 2026-10-19 — Etapa 4: APK (`feat/etapa-4-apk`) — validada no tablet
+
+**Resultado (usuário):** o `build-apk.bat` gerou o APK de primeira no PC (Windows, JDK 21, SDK em `C:\Android`); instalou no tablet (Samsung, One UI 3.1, Android 11); o campo PC conectou ao servidor; o app funcionou bem; e **no tablet não houve picote de voz**.
+
+**O que isso confirma:** a picotada vinha da **CPU do PC disputada** entre o Kokoro (sintetizando a frase seguinte) e o Chrome (tocando a anterior), como na hipótese do print do Gerenciador de Tarefas (CPU em 90%). Com o áudio tocando no tablet, o PC só sintetiza e manda o arquivo, e a disputa some. As mudanças feitas no PC (Web Audio, menos threads do Kokoro, prioridade baixa) ficam úteis para quem rodar tudo no mesmo PC.
+
+**Ainda não confirmado pelo usuário:** se há "bip" a cada reinício da escuta no tablet; o **eco** (o Orbit escutar a própria voz), que só se prova com alto-falante e microfone reais, como no tablet; e o wake lock durante 15 min de uso.
+
+**Contexto da validação** (o texto abaixo é o que estava antes do teste)
+
+**Contexto:** tablet Samsung com One UI 3.1 e Android 11 (API 30); instalação manual do APK (sem adb); SDK em `C:\Android` com as licenças aceitas; JDK 21.
+
+**O que ficou pronto**
+- Capacitor **7.6** (`core`, `android`, `cli`) e o plugin `@capacitor-community/speech-recognition` 7.0.1. Projeto Android em `app/android/` (compileSdk 35, minSdk 23, AGP 8.7.2, Gradle 8.11.1, aceitam o JDK 21).
+- `SttNativo` (`voice/stt-nativo.ts`): o mesmo contrato do `Stt`; ciclo sequencial de `start()` (o plugin só responde quando o Android entrega a frase); "No match"/"No speech input" não são erro; pede a permissão do microfone; erros de rede, áudio, permissão e serviço ausente viram avisos. O `app.config.ts` escolhe o nativo no APK e a Web Speech API no navegador.
+- **Endereço do PC na tela:** campo **PC** no painel ⚙ com botão Conectar e indicador conectado/sem conexão; o endereço fica salvo e aceita IP, IP:porta ou URL colada. A conexão antiga é fechada sem reabrir sozinha.
+- No APK, ir para segundo plano põe o Orbit em standby (o Android não deixa um app em segundo plano ouvir).
+- Ícone (a carinha) e tela de abertura gerados em `app/assets/` e já aplicados em `res/`.
+- `build-apk.bat` na raiz, adaptado do Locked-In: mesmo fluxo, apontando para `app/`, com checagem do JDK e do SDK e `npm install` se faltar.
+- Testes: 72 no app (14 novos: `SttNativo` com plugin falso, normalização do endereço, novos avisos) e 27 no servidor.
+
+**Decisões e por quê**
+- **Capacitor 7 e não o 8 (que é o mais novo):** o único plugin de voz que usamos foi feito para o 7 (o 8 exigiria SDK 36 e um plugin que ninguém testou com ele).
+- **`androidScheme: 'http'`:** com `https://localhost` o `ws://<IP>` seria bloqueado como conteúdo misto (o 1º risco da lista). `localhost` segue sendo contexto seguro. No manifesto, `usesCleartextTraffic="true"`, que o Android 9+ exige para `ws://` fora de `localhost`.
+- **IP digitado na tela, e não fixo no código:** o IP do PC muda de rede para rede; ele fica salvo no aparelho.
+- **Removi o `@capacitor/assets` das dependências:** só serve para gerar os ícones (já gerados e commitados) e arrastava o `sharp` e um `tar` vulnerável, que subiam a auditoria de 13 para 19 (1 crítica). Para refazer os ícones: `npx @capacitor/assets generate --android`.
+- **Limite de aviso do bundle de 500 kB para 600 kB:** o app é embutido no APK, não baixado; o Capacitor e o plugin somam ~9 kB.
+
+**Não verificado (precisa do PC e do tablet)**
+- **A compilação do APK:** neste ambiente não há Android SDK, e a Google bloqueia o repositório do plugin do Gradle (`dl.google.com`, 403); o Gradle baixou e rodou, mas não resolveu o AGP. Só dá para provar no PC com `build-apk.bat`.
+- O reconhecimento nativo no tablet: permissão, serviço de voz do Google, pacote offline em pt-BR e se o **bip** a cada reinício da escuta acontece (o plano prevê silenciar o fluxo de notificação se acontecer).
+- Wake lock no WebView, versão do Android System WebView e conexão `ws://` ao PC pelo Wi-Fi.
+- Que o Android 11 do Samsung entrega o `SpeechRecognizer` sem popup.
 
 ---
 
