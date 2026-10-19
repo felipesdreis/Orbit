@@ -41,8 +41,14 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 - **`parar()` por "geração":** tudo o que estava em andamento (downloads, falas nativas) é invalidado de uma vez ao dormir ou ao começar de novo.
 - **Pedaços de ~100 caracteres:** a síntese custa ~0,4 s fixos mais ~0,015 s por caractere, e a fala é bem mais lenta que a síntese; pedaços curtos adiantam o 1º áudio sem risco de a síntese não acompanhar.
 
+**Retoque no mesmo dia (print do Gerenciador de Tarefas do usuário: CPU em 90% e VRAM de 8 GB cheia durante a fala):**
+- "Todos os núcleos menos 2" deixava o Kokoro com muitos threads em máquinas com muitos núcleos. Agora: metade dos núcleos físicos, entre 2 e 4, com `ORBIT_TTS_THREADS` para sobrescrever (log: `Kokoro com N threads de CPU`).
+- O processo do servidor passa a rodar em prioridade **abaixo do normal** (`server/processo.py`), para o Chrome e o áudio do sistema passarem na frente quando a CPU está disputada.
+- A VRAM cheia (Gemma ~5,4 GB mais o navegador e o resto) não causa picote de áudio, mas pode atrasar o LLM.
+
 **Não verificado (precisa do PC)**
 - Se a picotada sumiu (em voz alta, com caixa de som, respostas longas).
+- Se o próprio WAV tem o picote: tocar um arquivo de `%TEMP%\orbit_audio\` num player. Se picotar lá, o problema é da síntese e não da reprodução.
 - Se o Orbit escuta a própria voz (o teste anterior foi com fone de ouvido, que não prova nada).
 - Que o Kokoro com 2 núcleos livres não ficou lento demais (comparar os `TTS da frase` do log).
 

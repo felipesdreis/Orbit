@@ -69,7 +69,7 @@ pip install kokoro==0.9.4 :: TTS real; traz o torch (é grande)
 python -m server           :: sobe em 0.0.0.0:8765
 ```
 
-Variáveis opcionais: `ORBIT_MODELO` (padrão `Gemma4-E4B-uncensored:latest`), `ORBIT_OLLAMA_URL`, `ORBIT_PORTA`, `ORBIT_BUSCA_RAIZES` (pastas do `buscar_arquivo`). Libere a porta 8765 no firewall do Windows para o tablet alcançar o PC.
+Variáveis opcionais: `ORBIT_TTS_THREADS` (núcleos de CPU do Kokoro; padrão: metade dos núcleos físicos, entre 2 e 4; se a voz ainda engasgar, tente `1` ou `2`), `ORBIT_MODELO` (padrão `Gemma4-E4B-uncensored:latest`), `ORBIT_OLLAMA_URL`, `ORBIT_PORTA`, `ORBIT_BUSCA_RAIZES` (pastas do `buscar_arquivo`). Libere a porta 8765 no firewall do Windows para o tablet alcançar o PC.
 
 ### Testar
 
