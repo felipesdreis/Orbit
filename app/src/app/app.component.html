@@ -1,27 +1,39 @@
 <ion-app>
   <ion-content [scrollY]="false" [fullscreen]="true">
-    <main class="palco">
-      <app-face [estado]="estado()" [emocao]="emocao()" />
+    <main class="palco" #palco>
+      <app-face [estado]="orbit.estado()" [emocao]="orbit.emocao()" />
     </main>
+
+    @if (orbit.imagem(); as url) {
+      <img class="imagem" [src]="url" alt="Imagem enviada pelo Orbit" (click)="orbit.imagem.set(null)" />
+    }
+
+    @if (orbit.aviso(); as aviso) {
+      <p class="aviso" role="alert">{{ aviso }}</p>
+    }
 
     <button class="alternar" type="button" aria-label="Painel de teste" (click)="painel.set(!painel())">⚙</button>
 
     @if (painel()) {
       <section class="painel" aria-label="Painel de teste">
+        @if (orbit.ouvido(); as ouvido) {
+          <div class="ouvido">Ouvi: “{{ ouvido.texto }}” — {{ ouvido.enviado ? 'enviado' : 'ignorado' }}</div>
+        }
         <div class="grupo">
           <span>Estado</span>
           @for (e of estados; track e) {
-            <ion-button size="small" [fill]="estado() === e ? 'solid' : 'outline'" (click)="estado.set(e)">{{ e }}</ion-button>
+            <ion-button size="small" [fill]="orbit.estado() === e ? 'solid' : 'outline'" (click)="forcar(e)">{{ e }}</ion-button>
           }
         </div>
         <div class="grupo">
           <span>Emoção</span>
           @for (e of emocoes; track e) {
-            <ion-button size="small" [fill]="emocao() === e ? 'solid' : 'outline'" (click)="emocao.set(e)">{{ e }}</ion-button>
+            <ion-button size="small" [fill]="orbit.emocao() === e ? 'solid' : 'outline'" (click)="forcarEmocao(e)">{{ e }}</ion-button>
           }
         </div>
         <div class="grupo">
           <ion-button size="small" color="medium" (click)="demo()">{{ demoRodando() ? 'Parar demo' : 'Demo (23 s)' }}</ion-button>
+          <ion-button size="small" color="medium" (click)="orbit.dormir()">Dormir</ion-button>
         </div>
       </section>
     }

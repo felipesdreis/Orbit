@@ -150,6 +150,7 @@ def test_ws_resposta_emocao_e_um_audio_por_frase_em_ordem():
         ws.send_json({"type": "fala", "text": "orbit como está o pc"})
         msgs = receber_ate_audios(ws, 2)
         assert [m["type"] for m in msgs] == ["pensando", "resposta", "audio", "audio"]
+        assert ws.receive_json() == {"type": "fim"}
         assert msgs[1] == {"type": "resposta", "text": "Está tudo certo por aqui. O PC está ótimo hoje!", "emocao": "feliz", "audio": True}
         assert falso.frases == ["Está tudo certo por aqui.", "O PC está ótimo hoje!"]
         wav = cliente.get(msgs[2]["url"].replace("http://testserver", ""))
@@ -177,6 +178,7 @@ def test_ws_sem_tts_avisa_o_tablet_para_usar_a_voz_nativa(monkeypatch):
         ws.send_json({"type": "fala", "text": "orbit oi"})
         assert ws.receive_json() == {"type": "pensando"}
         assert ws.receive_json() == {"type": "resposta", "text": "Oi!", "emocao": "curioso", "audio": False}
+        assert ws.receive_json() == {"type": "fim"}
 
 
 def test_ws_falha_da_ponte_vira_resposta_amigavel():
@@ -188,6 +190,8 @@ def test_ws_falha_da_ponte_vira_resposta_amigavel():
         ws.send_json({"type": "fala", "text": "orbit oi"})
         ws.receive_json()
         assert ws.receive_json()["text"].startswith("Não consegui")
+        assert ws.receive_json()["type"] == "audio"  # a mensagem de erro também é falada
+        assert ws.receive_json() == {"type": "fim"}
 
 
 def test_files_desconhecido_da_404():

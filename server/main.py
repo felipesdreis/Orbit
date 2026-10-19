@@ -64,6 +64,8 @@ def criar_app(ponte=None, tts=None) -> FastAPI:
                 msg = await socket.receive_json()
                 if msg.get("type") == "fala" and msg.get("text", "").strip():
                     await _atender(app, socket, base, historico, msg["text"].strip())
+                    # Marca o fim da vez: o tablet só volta a ouvir depois que o último áudio tocar.
+                    await socket.send_json({"type": "fim"})
         except WebSocketDisconnect:
             pass
 

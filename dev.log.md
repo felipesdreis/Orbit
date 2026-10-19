@@ -8,13 +8,14 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta ([PR #1](https://github.com/felipesdreis/Orbit/pull/1)) |
 | 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
-| 3. Voz no PWA | pendente |
+| 3. Voz no PWA | código pronto e testado com microfone simulado; falta testar com microfone real no Chrome do PC |
 | 4. APK | pendente |
 | 5. Guia e README | pendente |
 
 ## Pendências abertas
 
 - Latência: a busca de arquivo levou 11,6 s até o 1º áudio (10,1 s só até a resposta do LLM). O servidor agora registra o tempo do LLM, da tool e do TTS; **medir de novo no PC** para ver onde está o gargalo.
+- **Testar a etapa 3 com microfone real no Chrome do PC** (roteiro no README, seção "Etapa 3").
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
 
@@ -34,6 +35,40 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 - **Microfone riscado descartado** a pedido do usuário: o ícone continua só em `ouvindo`.
 
 **Verificação**: `pytest -q` (21 passando; o teste da busca agora confere que o caminho completo não aparece no texto falado). **Falta**: rodar no PC para ver os tempos por parte e confirmar que o Gemma fala só nome e pasta.
+
+## 2026-10-17 — Etapa 3: voz no PWA (`feat/etapa-3-voz`)
+
+**O que ficou pronto**
+- `app/src/app/voice/orbit.service.ts`: máquina de estados da conversa. Toque na carinha acorda; ativo por 15 min (renova a cada fala reconhecida); filtro do nome; janela de follow-up de 25 s; half-duplex; wake lock; avisos (sem conexão, microfone bloqueado, navegador sem STT).
+- `stt-webspeech.ts` (Web Speech API, pt-BR, reinicia no `onend`), `fala-navegador.ts` (fila de áudios + voz nativa de fallback), `ativador.ts` (interface plugável; implementação por toque), `nome.ts` (filtro do nome), `api/api-websocket.ts` (WebSocket com reconexão e `?pc=<ip>`).
+- Painel de teste agora mostra "Ouvi: … — enviado/ignorado" e os botões de estado/emoção só mexem na aparência.
+- Servidor: nova mensagem `fim` no fim de cada vez (protocolo acrescentado, testes atualizados).
+- Testes: 45 no app (Karma/Jasmine em Chrome headless: 31 do filtro do nome + 14 da máquina de estados) e 21 no servidor.
+
+**Decisões e por quê**
+- **Mensagem `fim` no protocolo:** o servidor manda um `audio` por frase e nada marcava o fim da fala. Sem isso o microfone voltaria a ouvir numa pausa entre frases e o Orbit escutaria a própria voz (half-duplex).
+- **STT, voz e API como classes abstratas** com a implementação real ligada em `app.config.ts`: os testes trocam por falsas e cobrem toda a máquina de estados sem microfone; o APK troca só o STT.
+- **O rosto só vira "falando" quando o som começa:** entre a resposta e o 1º áudio ficam ~1 s de síntese; antes a boca mexeria em silêncio.
+- **Qualquer fala reconhecida renova os 15 min**, mesmo a ignorada pelo filtro: alguém está por perto.
+- **Toque só acorda na área da carinha:** os botões do painel de teste não ligam o microfone sem querer.
+- **Filtro do nome por palavra inteira** (subagente): "exorbitante" não casa; "órbita" casa porque o handoff pede essa variante (efeito colateral: "a lua está em órbita" também acorda); "o bit" casa por virar "obit".
+- **Se o servidor nunca mandar `fim`,** o Orbit volta a ouvir depois de 90 s.
+
+**Verificação de ponta a ponta (Chromium real, STT simulado, servidor real com ponte e TTS falsos, áudio WAV real)** — 7 cenários passaram:
+- toque acorda e liga o microfone; frase sem o nome é ignorada;
+- pensando → falando (só quando o áudio começa a tocar, +359 ms) → ouvindo (+1,7 s); 2 áudios tocaram em ordem; o reconhecimento só reiniciou no instante em que o último áudio terminou;
+- follow-up sem o nome aceito logo após a resposta e ignorado depois de 27 s;
+- imagem aparece (640 px) e fecha com um toque;
+- com o servidor derrubado aparece "Sem conexão com o PC" e, ao subir de novo, o app reconecta sozinho (< 5 s);
+- console sem erros inesperados.
+
+**Não verificado**
+- Microfone e reconhecimento reais no Chrome do PC (o STT foi simulado; o falso não reproduz o timeout de silêncio nem os erros de rede do Chrome).
+- Áudio audível, Kokoro real, e tempo de resposta ponta a ponta com voz (STT → LLM → TTS).
+- Voz nativa de fallback (`audio: false`), expirar dos 15 min e `visibilitychange` só têm teste unitário (relógio simulado).
+- Tablet/Android (etapa 4).
+
+**Como testar**: roteiro no `README.md`, seção "Etapa 3".
 
 ## 2026-10-17 — Etapa 2: validação no PC (Gemma4-E4B-uncensored + Kokoro pm_santa em CPU)
 

@@ -45,3 +45,34 @@ ion-content {
     width: 56px;
   }
 }
+
+.imagem {
+  position: absolute;
+  inset: 5vmin;
+  z-index: 1;
+  width: calc(100% - 10vmin);
+  height: calc(100% - 10vmin);
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--orbit-bg);
+}
+
+.aviso {
+  position: absolute;
+  top: 8px;
+  left: 56px;
+  right: 56px;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 120, 80, 0.15);
+  color: #ffb199;
+  font: 14px sans-serif;
+  text-align: center;
+}
+
+.ouvido {
+  padding: 2px 0 6px;
+  color: var(--orbit-ciano);
+}
