@@ -9,7 +9,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 | 1. Carinha (PWA, sem voz) | pronta |
 | 2. Servidor + MCP + TTS | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
-| 4. APK | projeto pronto; **falta compilar no PC e testar no tablet** |
+| 4. APK | pronta e validada no tablet (Samsung, Android 11) |
 | 5. Guia de novas tools | pendente |
 
 ## Etapa 1 — Carinha

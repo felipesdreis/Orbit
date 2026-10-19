@@ -9,7 +9,7 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 | 1. Carinha (PWA, sem voz) | pronta ([PR #1](https://github.com/felipesdreis/Orbit/pull/1)) |
 | 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
-| 4. APK | projeto pronto e testado no que dá sem o SDK; falta compilar no PC e testar no tablet |
+| 4. APK | pronta e validada no tablet (Samsung, Android 11) |
 | 5. Guia e README | pendente |
 
 ## Pendências abertas
@@ -22,7 +22,15 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 ---
 
-## 2026-10-19 — Etapa 4: APK (`feat/etapa-4-apk`) — projeto pronto, falta compilar e testar no tablet
+## 2026-10-19 — Etapa 4: APK (`feat/etapa-4-apk`) — validada no tablet
+
+**Resultado (usuário):** o `build-apk.bat` gerou o APK de primeira no PC (Windows, JDK 21, SDK em `C:\Android`); instalou no tablet (Samsung, One UI 3.1, Android 11); o campo PC conectou ao servidor; o app funcionou bem; e **no tablet não houve picote de voz**.
+
+**O que isso confirma:** a picotada vinha da **CPU do PC disputada** entre o Kokoro (sintetizando a frase seguinte) e o Chrome (tocando a anterior), como na hipótese do print do Gerenciador de Tarefas (CPU em 90%). Com o áudio tocando no tablet, o PC só sintetiza e manda o arquivo, e a disputa some. As mudanças feitas no PC (Web Audio, menos threads do Kokoro, prioridade baixa) ficam úteis para quem rodar tudo no mesmo PC.
+
+**Ainda não confirmado pelo usuário:** se há "bip" a cada reinício da escuta no tablet; o **eco** (o Orbit escutar a própria voz), que só se prova com alto-falante e microfone reais, como no tablet; e o wake lock durante 15 min de uso.
+
+**Contexto da validação** (o texto abaixo é o que estava antes do teste)
 
 **Contexto:** tablet Samsung com One UI 3.1 e Android 11 (API 30); instalação manual do APK (sem adb); SDK em `C:\Android` com as licenças aceitas; JDK 21.
 
