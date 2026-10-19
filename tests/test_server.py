@@ -138,7 +138,7 @@ async def mcp_real():
 async def test_mcp_expoe_as_tools_no_formato_do_ollama():
     async with mcp_real() as mcp:
         nomes = {t["function"]["name"] for t in mcp.tools_ollama}
-        assert nomes == {"pc_status", "buscar_arquivo", "screenshot"}
+        assert {"pc_status", "buscar_arquivo", "screenshot"} <= nomes
         assert all(t["type"] == "function" and t["function"]["parameters"] for t in mcp.tools_ollama)
 
 
@@ -284,3 +284,20 @@ async def test_chat_ollama_monta_o_pedido_e_le_a_mensagem(monkeypatch):
     assert visto["url"].endswith("/api/chat")
     assert visto["corpo"]["model"] == ponte_mod.MODELO and visto["corpo"]["stream"] is False
     assert visto["corpo"]["tools"] == tools
+
+
+# ---- comando para testar uma tool isolada ----
+
+async def test_testar_tool_lista_e_chama(capsys):
+    from server.testar_tool import executar
+
+    assert await executar(None, {}, listar=True) == 0
+    saida = capsys.readouterr().out
+    assert "pc_status" in saida and "[leitura]" in saida
+
+    assert await executar("pc_status", {}) == 0
+    saida = capsys.readouterr().out
+    assert "CPU" in saida and "falado em voz alta" in saida
+
+    assert await executar("nao_existe", {}) == 2
+    assert "não encontrada" in capsys.readouterr().out

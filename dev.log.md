@@ -10,15 +10,36 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 | 2. Servidor + MCP + TTS no PC | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pronta e validada no PC (Chrome, microfone real, Kokoro real) |
 | 4. APK | pronta e validada no tablet (Samsung, Android 11) |
-| 5. Guia e README | pendente |
+| 5. Guia e README | pronta (`tools/GUIA_NOVA_TOOL.md`), falta validar a escolha da tool pelo Gemma |
 
 ## Pendências abertas
 
 - **Latência (medida):** mediana de 7,3 s até o 1º áudio, pior caso 12,9 s; quase tudo é o LLM. Itens 1 a 3 (prompt curto, frases longas quebradas, busca) feitos no polimento. Ainda em aberto: (4) streaming do LLM para falar a 1ª frase enquanto o resto é gerado; (5) pular a 2ª passada do LLM nas tools de resposta curta.
 - **Hallucination:** o Orbit não lê o conteúdo de arquivos (as 3 tools só listam nomes) e já inventou um resumo; o prompt agora manda dizer que não consegue. Decidir se vale criar uma tool de leitura (`ler_arquivo`, `[leitura]`).
 - Vulnerabilidades restantes (13, só de ferramentas de desenvolvimento, sem correção publicada): resolver só trocando o builder webpack e o Karma. Risco aceito por ora.
-- `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
+
+---
+
+## 2026-10-19 — Etapa 5: guia de novas tools (`feat/etapa-5-guia-tools`)
+
+**O que ficou pronto**
+- `tools/GUIA_NOVA_TOOL.md`: receita mínima, regras para o modelo pequeno (nome, descrição de uma linha, até 2 parâmetros, retorno curto e falável, `ERRO:`), convenção `[leitura]`/`[escrita]`, testes, devolução de imagens e checklist.
+- `python -m server.testar_tool [--listar] <tool> '<json>'`: chama uma tool isolada e mostra retorno, tempo e destino (fala, imagem ou erro).
+- `tests/test_tools.py`: `test_toda_tool_segue_a_convencao_do_guia` verifica toda tool descoberta; as checagens do núcleo viraram "contém" em vez de "igual", para uma tool nova não quebrar teste antigo.
+- `tools/hora_data.py` + `tests/test_hora_data.py` (8 testes): tool de exemplo. Suíte: 37 passando.
+
+**Validação do guia**: um subagente sem contexto criou `hora_data` usando só o guia. Ele apontou 11 lacunas; todas tratadas no guia ou no código. As principais:
+- `tests/conftest.py` (novo) coloca `tools/` no caminho de importação com `sys.path.append`. Não pode ser `insert(0)`: `tools/server.py` esconderia o pacote `server/`.
+- Regras novas: lógica que depende do ambiente (hora) recebe o valor como parâmetro opcional; nunca usar `locale` para texto falado; formatos de hora e data ("meia-noite e 7", "primeiro"); ativação do `.venv` por sistema; `"{}"` para tool sem parâmetros; ruído `INFO` na saída é normal.
+
+**Decisões e por quê**
+- Teste de convenção automático: regra só escrita no guia se perde; no teste, quem erra descobre na hora.
+- Passo com Ollama ficou opcional no guia (pode ser pulado, anotando): nem todo ambiente de desenvolvimento tem o modelo.
+
+**Não verificado (precisa do PC)**: o Gemma escolher a `hora_data` com três frases diferentes (`python -m server.teste_ws "orbit que horas são"`).
+
+**Como testar**: `pytest -q`; `python -m server.testar_tool hora_data "{}"`.
 
 ---
 
