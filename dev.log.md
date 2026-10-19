@@ -16,9 +16,24 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 - **Latência (medida):** mediana de 7,3 s até o 1º áudio, pior caso 12,9 s; quase tudo é o LLM. Itens 1 a 3 (prompt curto, frases longas quebradas, busca) feitos no polimento. Ainda em aberto: (4) streaming do LLM para falar a 1ª frase enquanto o resto é gerado; (5) pular a 2ª passada do LLM nas tools de resposta curta.
 - **Hallucination:** o Orbit não lê o conteúdo de arquivos (as 3 tools só listam nomes) e já inventou um resumo; o prompt agora manda dizer que não consegue. Decidir se vale criar uma tool de leitura (`ler_arquivo`, `[leitura]`).
-- Atualização de dependências do app (Angular 19 → 21 elimina as 7 vulnerabilidades de produção; sobram 13 de ferramentas de desenvolvimento sem correção real) e `npm start` só em `localhost`. Aguardando decisão.
+- Vulnerabilidades restantes (13, só de ferramentas de desenvolvimento, sem correção publicada): resolver só trocando o builder webpack e o Karma. Risco aceito por ora.
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
 - Nada foi testado em tablet real.
+
+---
+
+## 2026-10-19 — Dependências: Angular 21 e `npm start` só em `localhost` (`feat/dependencias-angular-21`)
+
+**O que ficou pronto**
+- Angular 19 → 20 → 21 (`ng update` em duas etapas, que não aceita pular a versão), TypeScript 5.9, build-angular 21.2.27. Ionic segue na 8.x (aceita Angular 18+). A migração para o 20 só acrescentou a config de nomes de arquivos gerados no `angular.json`; para o 21 não houve migração de código.
+- **Auditoria: 40 → 13 vulnerabilidades; produção: 7 → 0.** Build sem avisos e 58 testes do app passando.
+- `npm start` agora serve só em `localhost`; `npm run start:rede` abre para a rede (usar para o tablet).
+
+**Decisões e por quê**
+- **Não rodar `npm audit fix --force`:** ele sugere trocar o `karma` por 4.0.0 e o builder por `0.1002.1`, que são downgrades, não correções. O `npm audit fix` comum não muda nada.
+- **Lockfile gerado com npm 11** (o do usuário): o npm 10 quebrou por um erro interno ao resolver as versões 21.
+- **`npm start` em `localhost`:** o servidor de desenvolvimento aberto na rede era onde as falhas das ferramentas pesavam mais; agora a rede só é aberta de propósito.
+- **As 13 que sobram ficam como risco conhecido:** vêm de duas causas só de ferramentas de desenvolvimento, sem correção publicada. `braces` (alta, intervalo `<=3.0.3` e a 3.0.3 é a última 3.x) arrasta karma, chokidar, micromatch e o servidor de desenvolvimento; `uuid` (moderada) vem do `sockjs` do servidor de desenvolvimento. `overrides` não ajudaria no `braces` e não vale o custo de manutenção para o `uuid`. Só se resolve trocando o builder (webpack) e o runner de testes (Karma), uma migração maior que fica para depois.
 
 ---
 
