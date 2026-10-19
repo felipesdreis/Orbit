@@ -6,12 +6,11 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-TOOLS = Path(__file__).resolve().parent.parent / "tools"
-sys.path.insert(0, str(TOOLS))
+import buscar_arquivo  # tools/ já está no caminho de importação (tests/conftest.py)
+import pc_status
+import screenshot
 
-import buscar_arquivo  # noqa: E402
-import pc_status  # noqa: E402
-import screenshot  # noqa: E402
+TOOLS = Path(__file__).resolve().parent.parent / "tools"
 
 
 NUCLEO = {"pc_status", "buscar_arquivo", "screenshot"}

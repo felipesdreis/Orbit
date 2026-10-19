@@ -15,10 +15,9 @@ MESES = [
 def hora_data_logica(agora: datetime | None = None) -> str:
     """Monta a frase falada a partir de um datetime (padrão: agora, horário local)."""
     agora = agora or datetime.now()
-    if agora.minute == 0 and agora.hour == 0:
-        hora = "Agora é meia-noite."
-    elif agora.minute == 0 and agora.hour == 12:
-        hora = "Agora é meio-dia."
+    marco = {0: "meia-noite", 12: "meio-dia"}.get(agora.hour)
+    if marco:
+        hora = f"Agora é {marco}." if agora.minute == 0 else f"Agora é {marco} e {agora.minute}."
     elif agora.minute == 0:
         hora = f"Agora são {agora.hour} em ponto."
     elif agora.hour == 1:

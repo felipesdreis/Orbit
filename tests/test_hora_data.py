@@ -1,10 +1,6 @@
-import sys
 from datetime import datetime
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
-
-import hora_data  # noqa: E402
+import hora_data  # tools/ já está no caminho de importação (tests/conftest.py)
 
 
 def test_formato_exemplo():
@@ -42,8 +38,9 @@ def test_hora_com_minutos():
 def test_meia_noite_e_meio_dia():
     assert hora_data.hora_data_logica(datetime(2026, 10, 19, 0, 0)).startswith("Agora é meia-noite.")
     assert hora_data.hora_data_logica(datetime(2026, 10, 19, 12, 0)).startswith("Agora é meio-dia.")
-    # Logo depois, volta ao formato normal.
-    assert hora_data.hora_data_logica(datetime(2026, 10, 19, 0, 7)).startswith("Agora são 0 e 7.")
+    # Logo depois, continua falando como gente: "meia-noite e 7", não "0 e 7".
+    assert hora_data.hora_data_logica(datetime(2026, 10, 19, 0, 7)).startswith("Agora é meia-noite e 7.")
+    assert hora_data.hora_data_logica(datetime(2026, 10, 19, 12, 5)).startswith("Agora é meio-dia e 5.")
 
 
 def test_dia_primeiro():
