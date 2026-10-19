@@ -26,11 +26,12 @@ Em `standby` e `pensando` o estado define a aparência; em `ouvindo` e `falando`
 ```bash
 cd app
 npm install
-npm start          # serve em http://0.0.0.0:4200
+npm start          # serve em http://localhost:4200 (só neste PC)
+npm run start:rede # serve para a rede local (necessário para abrir no tablet)
 ```
 
 1. **PC:** abra `http://localhost:4200` no Chrome.
-2. **Tablet:** na mesma rede, abra `http://<IP-do-PC>:4200` (libere a porta 4200 no firewall do Windows). Para testar a carinha, HTTP basta; o microfone (etapa 3) é que exige HTTPS.
+2. **Tablet:** rode `npm run start:rede` (o `npm start` só atende este PC), e na mesma rede abra `http://<IP-do-PC>:4200` (libere a porta 4200 no firewall do Windows). Para testar a carinha, HTTP basta; o microfone (etapa 3) é que exige HTTPS.
 3. Use o painel de teste (botão ⚙ abre/fecha): botões de **Estado** e **Emoção**, e **Demo (23 s)**, que percorre tudo sozinho.
 
 Build de produção: `npm run build` (saída em `app/dist/app`).
