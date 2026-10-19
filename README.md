@@ -7,7 +7,7 @@ Assistente virtual por voz para tablet Android (carinha animada, estilo Emo robo
 | Etapa | Situação |
 |---|---|
 | 1. Carinha (PWA, sem voz) | pronta |
-| 2. Servidor + MCP + TTS | código pronto e testado com LLM/TTS falsos; **falta validar no PC** (Ollama e Kokoro reais) |
+| 2. Servidor + MCP + TTS | pronta e validada no PC (Gemma + Kokoro reais) |
 | 3. Voz no PWA | pendente |
 | 4. APK | pendente |
 | 5. Guia de novas tools | pendente |
@@ -83,8 +83,13 @@ O `teste_ws` imprime cada mensagem com o tempo desde o envio e, no fim, `Tempo a
 
 ### Tempo até o 1º áudio
 
-**A medir no PC** (o servidor também registra `1º áudio em X s` no log). Ainda não foi medido: o Ollama e o Kokoro reais não estão disponíveis onde o código foi escrito.
+Medido no PC do usuário (Gemma4-E4B-uncensored no Ollama + Kokoro `pm_santa` em CPU). O servidor também registra no log o tempo do LLM, de cada tool, de cada frase do TTS e do 1º áudio.
 
-| Frase | Resposta (s) | 1º áudio (s) |
-|---|---|---|
-| _pendente_ | | |
+| Frase | Tool chamada | Resposta (s) | 1º áudio (s) |
+|---|---|---|---|
+| orbit como está o pc | `pc_status` | 5,37 | 6,16 |
+| orbit mostra a tela | `screenshot` | 4,24 | 4,84 |
+| orbit procura o arquivo HANDOFF_ORBIT | `buscar_arquivo` | 10,13 | 11,59 |
+| orbit conta uma piada curta | nenhuma | 1,81 | 2,46 |
+
+O 1º teste incluiu a carga do modelo no Ollama, então o `pc_status` pode estar inflado. A busca de arquivo é a mais lenta; o log por parte mostra se o tempo vai para o LLM, para a tool ou para o TTS.

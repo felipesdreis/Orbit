@@ -33,6 +33,9 @@ def test_busca(tmp_path):
     assert [p.name for p in r] == ["Relatório Final.txt"]
     assert len(buscar_arquivo.buscar("foto", [tmp_path])) == 5
     assert "Não achei" in buscar_arquivo.formatar("zzz", buscar_arquivo.buscar("zzz", [tmp_path]))
+    # Resultado é falado em voz alta: só nome e pasta, nunca o caminho completo.
+    falado = buscar_arquivo.formatar("relatorio", r)
+    assert "Relatório Final.txt (pasta docs)" in falado and str(tmp_path) not in falado
 
 
 def test_screenshot_erro(monkeypatch):

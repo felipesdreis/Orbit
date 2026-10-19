@@ -14,15 +14,26 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 ## Pendências abertas
 
-- Latência: a busca de arquivo levou 11,6 s até o 1º áudio (10,1 s só até a resposta do LLM). Avaliar antes da etapa 3.
-- A resposta da busca traz o caminho completo e o Kokoro o lê em voz alta; considerar pedir no prompt só nome e pasta.
-- Tabela de tempos ainda não está no README (critério da etapa 2).
+- Latência: a busca de arquivo levou 11,6 s até o 1º áudio (10,1 s só até a resposta do LLM). O servidor agora registra o tempo do LLM, da tool e do TTS; **medir de novo no PC** para ver onde está o gargalo.
 - `tools/GUIA_NOVA_TOOL.md` (etapa 5) ainda não existe.
-
-- Microfone riscado/esmaecido nos estados em que o Orbit não está ouvindo (falando, pensando). Hoje o ícone só aparece em `ouvindo`. Aguardando decisão.
 - Nada foi testado em tablet real.
 
 ---
+
+## 2026-10-17 — Ajustes pós-validação da etapa 2 (`feat/ajustes-pos-validacao`)
+
+**O que ficou pronto**
+- `buscar_arquivo` devolve "nome (pasta X)" em vez do caminho completo, e o prompt proíbe falar caminhos, letras de unidade e endereços. Antes o Kokoro lia `C:\Users\...` em voz alta.
+- Log com o tempo de cada parte: `LLM respondeu em X s` (por rodada), `tool ... levou X s`, `resposta pronta em X s`, `TTS da frase N (M caracteres) em X s` e `1º áudio em X s`.
+- Log em UTF-8 (`sys.stdout.reconfigure`): no Windows, redirecionado para arquivo, o "º" saía quebrado.
+- README: status da etapa 2 e tabela de tempos preenchidos com as medições reais do PC.
+
+**Decisões e por quê**
+- **Caminho tratado na fonte (a tool), não só no prompt:** se o modelo nem recebe o `C:\Users\...`, não tem o que repetir. O prompt fica como segunda proteção.
+- **Mediu-se antes de otimizar a busca:** o 10,1 s da busca pode ser da tool (limite de 5 s), do LLM ou das duas rodadas; sem número por parte, qualquer otimização seria chute.
+- **Microfone riscado descartado** a pedido do usuário: o ícone continua só em `ouvindo`.
+
+**Verificação**: `pytest -q` (21 passando; o teste da busca agora confere que o caminho completo não aparece no texto falado). **Falta**: rodar no PC para ver os tempos por parte e confirmar que o Gemma fala só nome e pasta.
 
 ## 2026-10-17 — Etapa 2: validação no PC (Gemma4-E4B-uncensored + Kokoro pm_santa em CPU)
 

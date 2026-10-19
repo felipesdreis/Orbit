@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Awaitable, Callable
@@ -21,7 +22,9 @@ PROMPT_SISTEMA = (
     "[neutro], [feliz], [pensando], [curioso] ou [surpreso]. "
     "Use as ferramentas só quando o pedido depender do PC "
     "(status do computador, achar um arquivo, mostrar a tela). "
-    "Para conversa normal, responda direto, sem ferramenta."
+    "Para conversa normal, responda direto, sem ferramenta. "
+    "Nunca fale caminhos completos, letras de unidade nem endereços da internet: "
+    "diga só o nome do arquivo e a pasta onde ele está."
 )
 
 _RODADAS_MAX = 4   # idas e vindas com tools por pergunta
@@ -60,7 +63,9 @@ class Ponte:
         texto = "[pensando] Não consegui concluir isso."
 
         for _ in range(_RODADAS_MAX):
+            t0 = time.perf_counter()
             msg = await self._chat(mensagens, self._mcp.tools_ollama)
+            log.info("LLM respondeu em %.2f s", time.perf_counter() - t0)
             chamadas = msg.get("tool_calls") or []
             if not chamadas:
                 texto = msg.get("content", "")
@@ -71,8 +76,9 @@ class Ponte:
                 args = chamada["function"].get("arguments") or {}
                 if isinstance(args, str):
                     args = json.loads(args or "{}")
-                log.info("tool %s(%s)", nome, args)
+                t0 = time.perf_counter()
                 resultado = await self._mcp.chamar(nome, args)
+                log.info("tool %s(%s) levou %.2f s", nome, args, time.perf_counter() - t0)
                 caminho = Path(resultado.strip())
                 if caminho.suffix.lower() in _IMAGENS and caminho.is_absolute() and caminho.is_file():
                     imagens.append(caminho)
