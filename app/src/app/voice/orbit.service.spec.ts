@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Api } from '../api/api';
 import { MsgServidor } from '../api/mensagens';
 import { Fala } from './fala';
-import { ATIVO_MS, ESPERA_MAX_MS, FOLLOWUP_MS, OrbitService } from './orbit.service';
+import { ATIVO_MS, ESPERA_MAX_MS, FOLLOWUP_MS, LEGENDA_APOS_RESPOSTA_MS, LEGENDA_IGNORADA_MS, OrbitService } from './orbit.service';
 import { Stt } from './stt';
 
 class SttFalso extends Stt {
@@ -98,6 +98,39 @@ describe('OrbitService', () => {
     orbit.acordar();
     expect(orbit.estado()).toBe('ouvindo');
     expect(stt.ouvindo).toBeTrue();
+  });
+
+  it('legenda: frase ignorada aparece na tela principal e some depois de alguns segundos', () => {
+    orbit.acordar();
+    stt.dizer('que horas são');
+    expect(orbit.legenda()).toEqual({ texto: 'que horas são', enviado: false });
+    tempo(LEGENDA_IGNORADA_MS - 100);
+    expect(orbit.legenda()).not.toBeNull();
+    tempo(200);
+    expect(orbit.legenda()).toBeNull();
+    expect(orbit.ouvido()?.texto).toBe('que horas são'); // o painel ⚙ guarda a última frase
+  });
+
+  it('legenda: frase enviada fica durante a vez dele e some pouco depois de ele voltar a ouvir', async () => {
+    orbit.acordar();
+    stt.dizer('orbit como está o pc');
+    expect(orbit.legenda()).toEqual({ texto: 'orbit como está o pc', enviado: true });
+    tempo(60_000); // pensando e falando por muito tempo: a legenda continua
+    expect(orbit.legenda()).not.toBeNull();
+    await responderServidor();
+    expect(orbit.estado()).toBe('ouvindo');
+    expect(orbit.legenda()).not.toBeNull();
+    tempo(LEGENDA_APOS_RESPOSTA_MS + 100);
+    expect(orbit.legenda()).toBeNull();
+  });
+
+  it('legenda: uma frase nova troca a anterior e dormir apaga', () => {
+    orbit.acordar();
+    stt.dizer('primeira frase');
+    stt.dizer('segunda frase');
+    expect(orbit.legenda()?.texto).toBe('segunda frase');
+    orbit.dormir();
+    expect(orbit.legenda()).toBeNull();
   });
 
   it('o toque libera o áudio do navegador', () => {

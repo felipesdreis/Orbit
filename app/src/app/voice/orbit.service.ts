@@ -10,6 +10,8 @@ import { Stt } from './stt';
 export const ATIVO_MS = 15 * 60_000; // sem fala por 15 min, volta ao standby
 export const FOLLOWUP_MS = 25_000; // depois de uma resposta, o nome não é exigido
 export const ESPERA_MAX_MS = 90_000; // se o servidor não terminar a vez, volta a ouvir
+export const LEGENDA_IGNORADA_MS = 8_000; // frase sem o nome: a legenda some depois disso
+export const LEGENDA_APOS_RESPOSTA_MS = 5_000; // frase enviada: a legenda some depois que ele volta a ouvir
 
 /** Orquestra a conversa: ativação, escuta, filtro do nome, servidor e voz (half-duplex). */
 @Injectable({ providedIn: 'root' })
@@ -24,8 +26,11 @@ export class OrbitService {
   readonly aviso = signal<string | null>(null);
   /** Última frase reconhecida e o que se fez com ela (ajuda a depurar o filtro do nome). */
   readonly ouvido = signal<{ texto: string; enviado: boolean } | null>(null);
+  /** O que ele entendeu, para a tela principal: some sozinha (ver `registrarOuvido` e `voltarAOuvir`). */
+  readonly legenda = signal<{ texto: string; enviado: boolean } | null>(null);
 
   private expira?: ReturnType<typeof setTimeout>;
+  private apagaLegenda?: ReturnType<typeof setTimeout>;
   private vigia?: ReturnType<typeof setTimeout>;
   private semNomeAte = 0;
   private wakeLock?: { release(): Promise<void> };
@@ -67,6 +72,8 @@ export class OrbitService {
     this.estado.set('standby');
     this.emocao.set('neutro');
     this.imagem.set(null);
+    clearTimeout(this.apagaLegenda);
+    this.legenda.set(null);
     this.wakeLock?.release().catch(() => {});
     this.wakeLock = undefined;
   }
@@ -80,18 +87,30 @@ export class OrbitService {
     if (this.estado() !== 'ouvindo') return; // half-duplex: ignora o que chegar enquanto ele fala
     this.renovar(); // qualquer fala reconhecida mostra que há gente por perto
     const dentroDoFollowup = Date.now() < this.semNomeAte;
-    if (!dentroDoFollowup && !contemOrbit(texto)) return this.ouvido.set({ texto, enviado: false });
+    if (!dentroDoFollowup && !contemOrbit(texto)) return this.registrarOuvido(texto, false);
     if (!this.api.enviarFala(texto)) {
-      this.ouvido.set({ texto, enviado: false });
+      this.registrarOuvido(texto, false);
       return this.aviso.set('Sem conexão com o PC. Confira se o servidor está rodando e o endereço do PC em ⚙.');
     }
-    this.ouvido.set({ texto, enviado: true });
+    this.registrarOuvido(texto, true);
     this.aviso.set(null);
     this.imagem.set(null);
     this.estado.set('pensando');
     this.stt.parar();
     clearTimeout(this.vigia);
     this.vigia = setTimeout(() => this.voltarAOuvir(), ESPERA_MAX_MS);
+  }
+
+  /** Guarda o que foi ouvido. Frase enviada: a legenda fica até a vez terminar; ignorada: some logo. */
+  private registrarOuvido(texto: string, enviado: boolean): void {
+    this.ouvido.set({ texto, enviado });
+    this.legenda.set({ texto, enviado });
+    this.apagarLegendaEm(enviado ? undefined : LEGENDA_IGNORADA_MS);
+  }
+
+  private apagarLegendaEm(ms?: number): void {
+    clearTimeout(this.apagaLegenda);
+    if (ms !== undefined) this.apagaLegenda = setTimeout(() => this.legenda.set(null), ms);
   }
 
   private aoErroStt(erro: string): void {
@@ -135,6 +154,7 @@ export class OrbitService {
     clearTimeout(this.vigia);
     if (this.estado() === 'standby' || this.estado() === 'ouvindo') return;
     this.semNomeAte = Date.now() + FOLLOWUP_MS;
+    this.apagarLegendaEm(LEGENDA_APOS_RESPOSTA_MS);
     this.estado.set('ouvindo');
     this.emocao.set('neutro');
     this.renovar();

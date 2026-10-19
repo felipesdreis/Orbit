@@ -22,6 +22,20 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 
 ---
 
+## 2026-10-19 — Legenda do que ele ouviu na tela principal (`feat/legenda-ouvido`)
+
+**Pedido do usuário:** o texto que o Orbit entendeu só aparecia no painel ⚙ (com o menu aberto); ele precisa aparecer também na tela principal, logo abaixo do ícone de microfone.
+
+**O que ficou pronto**
+- Legenda no canto superior esquerdo, logo abaixo do microfone (`OrbitService.legenda`, `.legenda` no `app.component`). O painel ⚙ continua mostrando "Ouvi: …" como antes.
+- **Quando some:** frase **enviada** ao PC fica durante toda a vez dele (pensando e falando) e some 5 s depois que ele volta a ouvir; frase **ignorada** (sem "Orbit") fica 8 s, esmaecida e com o rótulo "ignorado", para o usuário ver por que ele não respondeu; dormir apaga. Uma frase nova troca a anterior.
+- A legenda não captura toques (`pointer-events: none`), então não atrapalha tocar na carinha.
+- Testes: 75 no app (3 novos da legenda). Verificado em Chromium real, em paisagem e retrato, com o painel fechado: aparece logo abaixo do microfone alinhada à esquerda, o texto certo, e some nos tempos acima.
+
+**Decisões e por quê**
+- **Só o texto final do reconhecimento, não o parcial (enquanto fala):** mostrar o texto ao vivo exigiria ligar os resultados parciais dos dois reconhecedores. No plugin nativo do Android isso muda o fluxo (o `start()` deixa de devolver o resultado e tudo chega por eventos, sem distinguir o final do parcial) e não dá para validar sem o tablet. Fica como melhoria futura, se quiser.
+- **Ligada ao ciclo da conversa, não a um tempo fixo:** uma legenda que some antes de ele responder deixaria o usuário sem ver o que ele entendeu justo quando importa.
+
 ## 2026-10-19 — Etapa 4: APK (`feat/etapa-4-apk`) — validada no tablet
 
 **Resultado (usuário):** o `build-apk.bat` gerou o APK de primeira no PC (Windows, JDK 21, SDK em `C:\Android`); instalou no tablet (Samsung, One UI 3.1, Android 11); o campo PC conectou ao servidor; o app funcionou bem; e **no tablet não houve picote de voz**.

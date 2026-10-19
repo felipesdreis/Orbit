@@ -97,3 +97,31 @@ ion-content {
     color: var(--orbit-ciano);
   }
 }
+
+// O que ele entendeu, logo abaixo do ícone de microfone (canto superior esquerdo).
+.legenda {
+  position: absolute;
+  // O microfone fica a 2vmin da carinha, que tem 4vmin de espaçamento: 6vmin do canto. Mesma altura do
+  // ícone (clamp igual ao de `.mic`) mais uma folga para a pulsação dele.
+  top: calc(6vmin + clamp(28px, 6vmin, 56px) + 14px);
+  left: 6vmin;
+  z-index: 1;
+  max-width: min(46vw, 560px);
+  margin: 0;
+  color: var(--orbit-ciano);
+  font: 500 clamp(15px, 2.6vmin, 26px) / 1.3 sans-serif;
+  text-shadow: 0 0 8px rgba(94, 231, 255, 0.35);
+  overflow-wrap: anywhere;
+  pointer-events: none; // não atrapalha o toque na carinha
+
+  &.ignorado {
+    opacity: 0.55;
+  }
+
+  small {
+    margin-left: 6px;
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}

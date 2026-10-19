@@ -4,6 +4,15 @@
       <app-face [estado]="orbit.estado()" [emocao]="orbit.emocao()" />
     </main>
 
+    @if (orbit.legenda(); as legenda) {
+      <p class="legenda" [class.ignorado]="!legenda.enviado" aria-live="polite">
+        “{{ legenda.texto }}”
+        @if (!legenda.enviado) {
+          <small>ignorado</small>
+        }
+      </p>
+    }
+
     @if (orbit.imagem(); as url) {
       <img class="imagem" [src]="url" alt="Imagem enviada pelo Orbit" (click)="orbit.imagem.set(null)" />
     }
