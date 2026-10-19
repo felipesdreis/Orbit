@@ -23,14 +23,12 @@ if not exist "%ANDROID_HOME%\licenses" (
 
 cd /d "%~dp0app"
 
-if not exist node_modules (
-    echo [0/2] Instalando dependencias do app...
-    call npm install
-    if errorlevel 1 (
-        echo ERRO no npm install. Abortando.
-        pause
-        exit /b 1
-    )
+echo [0/2] Conferindo as dependencias do app (rapido se ja estiver tudo instalado)...
+call npm install --no-audit --no-fund
+if errorlevel 1 (
+    echo ERRO no npm install. Abortando.
+    pause
+    exit /b 1
 )
 
 echo [1/2] Buildando assets web...
