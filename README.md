@@ -202,3 +202,4 @@ pytest -q
 - `server/testar_tool.py` chama uma tool isolada (sem tablet e sem LLM) e mostra retorno, tempo e se seria falado, exibido como imagem ou tratado como erro.
 - `tests/test_tools.py` reprova automaticamente tool sem `[leitura]`/`[escrita]`, com descrição de mais de uma linha, com mais de 2 parâmetros ou com nome fora do padrão.
 - `tools/hora_data.py` (hora e data em português falado) é a tool de exemplo criada seguindo só o guia.
+- `tools/calcular.py` (contas) e `tools/clima.py` (tempo e previsão em Mogi Guaçu, ou outra cidade, via Open-Meteo, sem chave de API) são as tools seguintes, criadas pelo mesmo guia.

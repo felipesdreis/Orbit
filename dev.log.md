@@ -34,6 +34,24 @@ Registro vivo do que foi feito, por etapa (ver `HANDOFF_ORBIT.md`). Cada entrada
 **Decisões e por quê**
 - **Só o texto final do reconhecimento, não o parcial (enquanto fala):** mostrar o texto ao vivo exigiria ligar os resultados parciais dos dois reconhecedores. No plugin nativo do Android isso muda o fluxo (o `start()` deixa de devolver o resultado e tudo chega por eventos, sem distinguir o final do parcial) e não dá para validar sem o tablet. Fica como melhoria futura, se quiser.
 - **Ligada ao ciclo da conversa, não a um tempo fixo:** uma legenda que some antes de ele responder deixaria o usuário sem ver o que ele entendeu justo quando importa.
+
+---
+
+## 2026-10-19 — Tools `calcular` e `clima` (`feat/tools-calcular-clima`)
+
+**O que ficou pronto**
+- `tools/calcular.py`: conta por voz ("quanto é 15 por cento de 240" vira `240*15/100`). Usa `ast` e só aceita números, `+ - * / **` e parênteses, sem `eval`; expoente limitado a 100 (evita `9**9**9` travar o servidor). Resultado falado com vírgula decimal e até 2 casas ("O resultado é 2,5.").
+- `tools/clima.py`: tempo agora e previsão do dia pelo Open-Meteo (sem chave de API). Padrão: Mogi Guaçu, SP, com coordenadas fixas no código; outra cidade pedida passa pela geocodificação do Open-Meteo.
+- `tests/test_calcular.py` e `tests/test_clima.py` (a rede é injetada nos testes). Suíte: 68 passando; o teste de convenção do guia aprovou as duas.
+
+**Decisões e por quê**
+- Ideias vieram do OpenJarvis (Apache 2.0): a calculadora com `ast`. O código foi reescrito no nosso formato `registrar(mcp)`, porque as tools deles dependem das classes do framework deles.
+- Clima com Open-Meteo e `urllib` da biblioteca padrão: sem chave nem dependência nova. Falha de rede devolve `ERRO: ...` em vez de exceção.
+
+**Não verificado**: o sandbox bloqueia o Open-Meteo, então o formato da resposta real não foi testado (os testes usam o formato da documentação). No PC: `python -m server.testar_tool clima "{}"`. Também falta ver o Gemma escolher as tools por voz.
+
+---
+
 ## 2026-10-19 — Etapa 5: guia de novas tools (`feat/etapa-5-guia-tools`)
 
 **O que ficou pronto**
